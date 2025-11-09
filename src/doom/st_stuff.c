@@ -107,7 +107,7 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 #define ST_GODFACE        (ST_NUMPAINFACES * ST_FACESTRIDE)
 #define ST_DEADFACE       (ST_GODFACE + 1)
 
-#define ST_FACESX 143
+#define ST_FACESX -56
 #define ST_FACESY 168
 
 #define ST_EVILGRINCOUNT     (2 * TICRATE)
@@ -127,15 +127,17 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 //       into a buffer,
 //       or into the frame buffer?
 
+#define ST_NUMBERS_Y 178
+
 // AMMO number pos.
 #define ST_AMMOWIDTH 3
-#define ST_AMMOX     (44 - ST_WIDESCREENDELTA)
-#define ST_AMMOY     171
+#define ST_AMMOX     340
+#define ST_AMMOY     ST_NUMBERS_Y
 
 // HEALTH number pos.
 #define ST_HEALTHWIDTH 3
-#define ST_HEALTHX     (90 - ST_WIDESCREENDELTA)
-#define ST_HEALTHY     171
+#define ST_HEALTHX     16
+#define ST_HEALTHY     ST_NUMBERS_Y
 
 // Weapon pos.
 #define ST_ARMSX      (111 - ST_WIDESCREENDELTA)
@@ -152,19 +154,19 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 
 // ARMOR number pos.
 #define ST_ARMORWIDTH 3
-#define ST_ARMORX     (221 + ST_WIDESCREENDELTA)
-#define ST_ARMORY     171
+#define ST_ARMORX     66
+#define ST_ARMORY     ST_NUMBERS_Y
 
 // Key icon positions.
 #define ST_KEY0WIDTH  8
 #define ST_KEY0HEIGHT 5
-#define ST_KEY0X      (239 + ST_WIDESCREENDELTA)
+#define ST_KEY0X      (260 + ST_WIDESCREENDELTA)
 #define ST_KEY0Y      171
 #define ST_KEY1WIDTH  ST_KEY0WIDTH
-#define ST_KEY1X      (239 + ST_WIDESCREENDELTA)
+#define ST_KEY1X      (260 + ST_WIDESCREENDELTA)
 #define ST_KEY1Y      181
 #define ST_KEY2WIDTH  ST_KEY0WIDTH
-#define ST_KEY2X      (239 + ST_WIDESCREENDELTA)
+#define ST_KEY2X      (260 + ST_WIDESCREENDELTA)
 #define ST_KEY2Y      191
 
 // Ammunition counter.
