@@ -277,7 +277,7 @@ static st_number_t w_ready;
 static st_number_t w_frags;
 
 // health widget
-static st_percent_t w_health;
+static st_number_t w_health;
 
 // arms background
 static st_binicon_t w_armsbg;
@@ -295,7 +295,7 @@ static st_multicon_t w_faces;
 static st_multicon_t w_keyboxes[3];
 
 // armor widget
-static st_percent_t w_armor;
+static st_number_t w_armor;
 
 // ammo widgets
 static st_number_t w_ammo[4];
@@ -1892,11 +1892,11 @@ void ST_drawWidgets(boolean refresh)
     {
         dp_translation = ST_WidgetColor(hudcolor_health);
         // [crispy] negative player health
-        w_health.n.num = crispy->neghealth ? &plyr->neghealth : &plyr->health;
-        STlib_updatePercent(&w_health, refresh);
+        w_health.num = crispy->neghealth ? &plyr->neghealth : &plyr->health;
+        STlib_updateNum(&w_health, refresh);
     }
     dp_translation = ST_WidgetColor(hudcolor_armor);
-    STlib_updatePercent(&w_armor, refresh);
+    STlib_updateNum(&w_armor, refresh);
     dp_translation = NULL;
 
     // STlib_updateBinIcon(&w_armsbg, refresh);
@@ -2186,8 +2186,8 @@ void ST_createWidgets(void)
     w_ready.data = plyr->readyweapon;
 
     // health percentage
-    STlib_initPercent(&w_health, ST_HEALTHX, ST_HEALTHY, tallnum, &plyr->health,
-                      &st_statusbaron, tallpercent);
+    STlib_initNum(&w_health, ST_HEALTHX, ST_HEALTHY, tallnum, &plyr->health,
+                  &st_statusbaron, ST_HEALTHWIDTH);
 
     // arms background
     STlib_initBinIcon(&w_armsbg, ST_ARMSBGX, ST_ARMSBGY, armsbg,
@@ -2212,8 +2212,8 @@ void ST_createWidgets(void)
                        &st_statusbarface);
 
     // armor percentage - should be colored later
-    STlib_initPercent(&w_armor, ST_ARMORX, ST_ARMORY, tallnum,
-                      &plyr->armorpoints, &st_statusbaron, tallpercent);
+    STlib_initNum(&w_armor, ST_ARMORX, ST_ARMORY, tallnum, &plyr->armorpoints,
+                  &st_statusbaron, ST_ARMORWIDTH);
 
     // keyboxes 0-2
     STlib_initMultIcon(&w_keyboxes[0], ST_KEY0X, ST_KEY0Y, keys, &keyboxes[0],
