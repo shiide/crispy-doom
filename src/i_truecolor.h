@@ -27,19 +27,26 @@
 #include "d_mode.h" // [crispy] for heretic/hexen blendfunctions
 #include <stdint.h>
 
-extern const uint32_t (*blendfunc) (const uint32_t fg, const uint32_t bg);
-extern const uint32_t (*I_BlendOverTinttab) (const uint32_t fg, const uint32_t bg); // [crispy] points to function for heretic/hexen normal blending
-extern const uint32_t (*I_BlendOverAltTinttab) (const uint32_t fg, const uint32_t bg); // [crispy] points to function for heretic/hexen alternative blending
+extern const uint32_t (*blendfunc)(const uint32_t fg, const uint32_t bg);
+extern const uint32_t (*I_BlendOverTinttab)(
+    const uint32_t fg,
+    const uint32_t
+        bg); // [crispy] points to function for heretic/hexen normal blending
+extern const uint32_t (*I_BlendOverAltTinttab)(
+    const uint32_t fg,
+    const uint32_t
+        bg); // [crispy] points to function for heretic/hexen alternative blending
 
-void I_InitTinttab (GameMission_t mission);
+void I_InitTinttab(GameMission_t mission);
 
-const uint32_t I_BlendAdd (const uint32_t bg_i, const uint32_t fg_i);
-const uint32_t I_BlendDark (const uint32_t bg_i, const int d);
-const uint32_t I_BlendOver (const uint32_t bg_i, const uint32_t fg_i, const int amount);
+const uint32_t I_BlendAdd(const uint32_t bg_i, const uint32_t fg_i);
+const uint32_t I_BlendDark(const uint32_t bg_i, const int d);
+const uint32_t I_BlendOver(const uint32_t bg_i, const uint32_t fg_i,
+                           const int amount);
 
-const uint32_t I_BlendOverTranmap (const uint32_t bg, const uint32_t fg);
-const uint32_t I_BlendOverXlatab (const uint32_t bg, const uint32_t fg);
-const uint32_t I_BlendOverAltXlatab (const uint32_t bg, const uint32_t fg);
+const uint32_t I_BlendOverTranmap(const uint32_t bg, const uint32_t fg);
+const uint32_t I_BlendOverXlatab(const uint32_t bg, const uint32_t fg);
+const uint32_t I_BlendOverAltXlatab(const uint32_t bg, const uint32_t fg);
 
 #endif
 

@@ -33,7 +33,7 @@
 // VIDEO
 //
 
-#define CENTERY			(SCREENHEIGHT/2)
+#define CENTERY (SCREENHEIGHT / 2)
 
 
 extern int dirtybox[4];
@@ -50,20 +50,19 @@ void V_SetPatchClipCallback(vpatchclipfunc_t func);
 
 
 // Allocates buffer screens, call before R_Init.
-void V_Init (void);
+void V_Init(void);
 
 // Draw a block from the specified source screen to the screen.
 
-void V_CopyRect(int srcx, int srcy, pixel_t *source,
-                int width, int height,
+void V_CopyRect(int srcx, int srcy, pixel_t *source, int width, int height,
                 int destx, int desty);
 
 void V_DrawPatch(int x, int y, patch_t *patch);
 void V_DrawPatchFlipped(int x, int y, patch_t *patch);
 void V_DrawTLPatch(int x, int y, patch_t *patch);
-void V_DrawAltTLPatch(int x, int y, patch_t * patch);
+void V_DrawAltTLPatch(int x, int y, patch_t *patch);
 void V_DrawShadowedPatch(int x, int y, patch_t *patch);
-void V_DrawXlaPatch(int x, int y, patch_t * patch);     // villsa [STRIFE]
+void V_DrawXlaPatch(int x, int y, patch_t *patch); // villsa [STRIFE]
 void V_DrawPatchDirect(int x, int y, patch_t *patch);
 void V_DrawPatchFullScreen(patch_t *patch, boolean flipped);
 
@@ -84,7 +83,7 @@ void V_DrawBox(int x, int y, int w, int h, int c);
 void V_DrawFullscreenRawOrPatch(lumpindex_t index); // [crispy]
 void V_UseBuffer(pixel_t *buffer);
 void V_FillFlat(int y_start, int y_stop, int x_start, int x_stop,
-                const byte *src, pixel_t *dest);    // [crispy]
+                const byte *src, pixel_t *dest); // [crispy]
 
 // Return to using the normal screen buffer to draw graphics.
 
@@ -112,4 +111,3 @@ void V_DrawMouseSpeedBox(int speed);
 boolean V_IsPatchLump(const int lump);
 
 #endif
-

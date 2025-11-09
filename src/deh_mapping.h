@@ -24,31 +24,25 @@
 #include "deh_io.h"
 #include "sha1.h"
 
-#define DEH_BEGIN_MAPPING(mapping_name, structname)           \
-    static structname deh_mapping_base;                       \
-    static deh_mapping_t mapping_name =                       \
-    {                                                         \
-        &deh_mapping_base,                                    \
-        {
+#define DEH_BEGIN_MAPPING(mapping_name, structname)                            \
+    static structname deh_mapping_base;                                        \
+    static deh_mapping_t mapping_name = {&deh_mapping_base, {
 
-#define DEH_MAPPING(deh_name, fieldname)                      \
-             {deh_name, &deh_mapping_base.fieldname,          \
-                 sizeof(deh_mapping_base.fieldname),          \
-                 false},
+#define DEH_MAPPING(deh_name, fieldname)                                       \
+    {deh_name, &deh_mapping_base.fieldname,                                    \
+     sizeof(deh_mapping_base.fieldname), false},
 
-#define DEH_MAPPING_STRING(deh_name, fieldname)               \
-             {deh_name, &deh_mapping_base.fieldname,          \
-                 sizeof(deh_mapping_base.fieldname),          \
-                 true},
+#define DEH_MAPPING_STRING(deh_name, fieldname)                                \
+    {deh_name, &deh_mapping_base.fieldname,                                    \
+     sizeof(deh_mapping_base.fieldname), true},
 
-#define DEH_UNSUPPORTED_MAPPING(deh_name)                     \
-             {deh_name, NULL, -1, false},
+#define DEH_UNSUPPORTED_MAPPING(deh_name) {deh_name, NULL, -1, false},
 
-#define DEH_END_MAPPING                                       \
+#define DEH_END_MAPPING                                                        \
              {NULL, NULL, -1}                                 \
-        }                                                     \
-    };
-
+        }                                                                      \
+    }                                                                          \
+    ;
 
 
 #define MAX_MAPPING_ENTRIES 32
@@ -90,4 +84,3 @@ void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
                        void *structptr);
 
 #endif /* #ifndef DEH_MAPPING_H */
-

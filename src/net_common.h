@@ -103,4 +103,3 @@ void NET_Log(const char *fmt, ...);
 void NET_LogPacket(net_packet_t *packet);
 
 #endif /* #ifndef NET_COMMON_H */
-

@@ -24,18 +24,28 @@
 #include "crispy.h"
 #include "i_truecolor.h"
 
-const uint32_t (*blendfunc) (const uint32_t fg, const uint32_t bg) = I_BlendOverTranmap;
+const uint32_t (*blendfunc)(const uint32_t fg,
+                            const uint32_t bg) = I_BlendOverTranmap;
 
-const uint32_t (*I_BlendOverTinttab) (const uint32_t fg, const uint32_t bg); // [crispy] points to function for heretic/hexen normal blending
-const uint32_t (*I_BlendOverAltTinttab) (const uint32_t fg, const uint32_t bg); // [crispy] points to function for heretic/hexen alternative blending
+const uint32_t (*I_BlendOverTinttab)(
+    const uint32_t fg,
+    const uint32_t
+        bg); // [crispy] points to function for heretic/hexen normal blending
+const uint32_t (*I_BlendOverAltTinttab)(
+    const uint32_t fg,
+    const uint32_t
+        bg); // [crispy] points to function for heretic/hexen alternative blending
 
-static const uint32_t I_BlendWeakOverTinttab (const uint32_t bg, const uint32_t fg);
-static const uint32_t I_BlendStrongOverTinttab (const uint32_t bg, const uint32_t fg);
+static const uint32_t I_BlendWeakOverTinttab(const uint32_t bg,
+                                             const uint32_t fg);
+static const uint32_t I_BlendStrongOverTinttab(const uint32_t bg,
+                                               const uint32_t fg);
 
 typedef union
 {
     uint32_t i;
-    struct {
+    struct
+    {
         uint8_t b;
         uint8_t g;
         uint8_t r;
@@ -43,7 +53,7 @@ typedef union
     };
 } tcpixel_t;
 
-void I_InitTinttab (GameMission_t mission)
+void I_InitTinttab(GameMission_t mission)
 {
     if (mission == heretic)
     {
@@ -57,7 +67,7 @@ void I_InitTinttab (GameMission_t mission)
     }
 }
 
-const uint32_t I_BlendAdd (const uint32_t bg_i, const uint32_t fg_i)
+const uint32_t I_BlendAdd(const uint32_t bg_i, const uint32_t fg_i)
 {
     tcpixel_t bg, fg, ret;
 
@@ -72,7 +82,7 @@ const uint32_t I_BlendAdd (const uint32_t bg_i, const uint32_t fg_i)
     return ret.i;
 }
 
-const uint32_t I_BlendDark (const uint32_t bg_i, const int d)
+const uint32_t I_BlendDark(const uint32_t bg_i, const int d)
 {
     tcpixel_t bg, ret;
 
@@ -86,7 +96,8 @@ const uint32_t I_BlendDark (const uint32_t bg_i, const int d)
     return ret.i;
 }
 
-const uint32_t I_BlendOver (const uint32_t bg_i, const uint32_t fg_i, const int amount)
+const uint32_t I_BlendOver(const uint32_t bg_i, const uint32_t fg_i,
+                           const int amount)
 {
     tcpixel_t bg, fg, ret;
 
@@ -102,31 +113,33 @@ const uint32_t I_BlendOver (const uint32_t bg_i, const uint32_t fg_i, const int 
 }
 
 // [crispy] TRANMAP blending emulation, used for Doom
-const uint32_t I_BlendOverTranmap (const uint32_t bg, const uint32_t fg)
+const uint32_t I_BlendOverTranmap(const uint32_t bg, const uint32_t fg)
 {
     return I_BlendOver(bg, fg, 0xA8); // 168 (66% opacity)
 }
 
 // [crispy] TINTTAB blending emulation, Heretic AltTinttab - Hexen Tinttab
-static const uint32_t I_BlendWeakOverTinttab (const uint32_t bg, const uint32_t fg)
+static const uint32_t I_BlendWeakOverTinttab(const uint32_t bg,
+                                             const uint32_t fg)
 {
     return I_BlendOver(bg, fg, 0x60); // 96 (38% opacity)
 }
 
 // [crispy] TINTTAB blending emulation, Heretic Tinttab - Hexen AltTinttab
-static const uint32_t I_BlendStrongOverTinttab (const uint32_t bg, const uint32_t fg)
+static const uint32_t I_BlendStrongOverTinttab(const uint32_t bg,
+                                               const uint32_t fg)
 {
     return I_BlendOver(bg, fg, 0x8E); // 142 (56% opacity)
 }
 
 // [crispy] More opaque XLATAB blending emulation, used for Strife
-const uint32_t I_BlendOverXlatab (const uint32_t bg, const uint32_t fg)
+const uint32_t I_BlendOverXlatab(const uint32_t bg, const uint32_t fg)
 {
     return I_BlendOver(bg, fg, 0xC0); // 192 (75% opacity)
 }
 
 // [crispy] Less opaque ("Alt") XLATAB blending emulation, used for Strife
-const uint32_t I_BlendOverAltXlatab (const uint32_t bg, const uint32_t fg)
+const uint32_t I_BlendOverAltXlatab(const uint32_t bg, const uint32_t fg)
 {
     return I_BlendOver(bg, fg, 0x40); // 64 (25% opacity)
 }

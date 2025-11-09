@@ -36,12 +36,11 @@ void PadRejectArray(byte *array, unsigned int len, int totallines)
 
     // Values to pad the REJECT array with:
 
-    unsigned int rejectpad[4] =
-    {
-        0,                                    // Size
-        0,                                    // Part of z_zone block header
-        50,                                   // PU_LEVEL
-        0x1d4a11                              // DOOM_CONST_ZONEID
+    unsigned int rejectpad[4] = {
+        0,       // Size
+        0,       // Part of z_zone block header
+        50,      // PU_LEVEL
+        0x1d4a11 // DOOM_CONST_ZONEID
     };
 
     rejectpad[0] = ((totallines * 4 + 3) & ~3) + 24;
@@ -50,7 +49,7 @@ void PadRejectArray(byte *array, unsigned int len, int totallines)
 
     dest = array;
 
-    for (i=0; i<len && i<sizeof(rejectpad); ++i)
+    for (i = 0; i < len && i < sizeof(rejectpad); ++i)
     {
         byte_num = i % 4;
         *dest = (rejectpad[i / 4] >> (byte_num * 8)) & 0xff;
@@ -62,8 +61,9 @@ void PadRejectArray(byte *array, unsigned int len, int totallines)
 
     if (len > sizeof(rejectpad))
     {
-        fprintf(stderr, "PadRejectArray: REJECT lump too short to pad! (%u > %i)\n",
-                        len, (int) sizeof(rejectpad));
+        fprintf(stderr,
+                "PadRejectArray: REJECT lump too short to pad! (%u > %i)\n",
+                len, (int) sizeof(rejectpad));
 
         // Pad remaining space with 0 (or 0xff, if specified on command line).
 

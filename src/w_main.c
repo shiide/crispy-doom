@@ -52,7 +52,7 @@ boolean W_ParseCommandLine(void)
 
     if (p > 0)
     {
-        for (p = p + 1; p<myargc && myargv[p][0] != '-'; ++p)
+        for (p = p + 1; p < myargc && myargv[p][0] != '-'; ++p)
         {
             char *filename;
 
@@ -81,7 +81,7 @@ boolean W_ParseCommandLine(void)
 
     if (p > 0)
     {
-        for (p = p + 1; p<myargc && myargv[p][0] != '-'; ++p)
+        for (p = p + 1; p < myargc && myargv[p][0] != '-'; ++p)
         {
             char *filename;
 
@@ -109,7 +109,7 @@ boolean W_ParseCommandLine(void)
 
     if (p > 0)
     {
-        for (p = p + 1; p<myargc && myargv[p][0] != '-'; ++p)
+        for (p = p + 1; p < myargc && myargv[p][0] != '-'; ++p)
         {
             char *filename;
 
@@ -135,7 +135,7 @@ boolean W_ParseCommandLine(void)
 
     if (p > 0)
     {
-        for (p = p + 1; p<myargc && myargv[p][0] != '-'; ++p)
+        for (p = p + 1; p < myargc && myargv[p][0] != '-'; ++p)
         {
             char *filename;
 
@@ -159,7 +159,7 @@ boolean W_ParseCommandLine(void)
 
     if (p > 0)
     {
-        for (p = p + 1; p<myargc && myargv[p][0] != '-'; ++p)
+        for (p = p + 1; p < myargc && myargv[p][0] != '-'; ++p)
         {
             char *filename;
 
@@ -182,13 +182,13 @@ boolean W_ParseCommandLine(void)
     // argument list is exhausted.
     //
 
-    p = M_CheckParmWithArgs ("-file", 1);
+    p = M_CheckParmWithArgs("-file", 1);
     if (p)
     {
-	// the parms after p are wadfile/lump names,
-	// until end of parms or another - preceded parm
-	modifiedgame = true;            // homebrew levels
-	while (++p != myargc && myargv[p][0] != '-')
+        // the parms after p are wadfile/lump names,
+        // until end of parms or another - preceded parm
+        modifiedgame = true; // homebrew levels
+        while (++p != myargc && myargv[p][0] != '-')
         {
             char *filename;
 
@@ -196,12 +196,12 @@ boolean W_ParseCommandLine(void)
 
             // [crispy] always merge arguments of "-file" parameter
             printf(" merging %s !\n", filename);
-	    W_MergeFile(filename);
+            W_MergeFile(filename);
             free(filename);
         }
     }
 
-//    W_PrintDirectory();
+    //    W_PrintDirectory();
 
     return modifiedgame;
 }
@@ -219,8 +219,8 @@ void W_AutoLoadWADsRename(const char *path, const lump_rename_t *renames,
     const char *filename, *basename;
     int i, j;
 
-    glob = I_StartMultiGlob(path, GLOB_FLAG_NOCASE|GLOB_FLAG_SORTED,
-                            "*.wad", "*.lmp", NULL);
+    glob = I_StartMultiGlob(path, GLOB_FLAG_NOCASE | GLOB_FLAG_SORTED, "*.wad",
+                            "*.lmp", NULL);
     for (;;)
     {
         filename = I_NextGlob(glob);
@@ -258,10 +258,10 @@ static const struct
     GameMission_t mission;
     const char *lumpname;
 } unique_lumps[] = {
-    { doom,    "POSSA1" },
-    { heretic, "IMPXA1" },
-    { hexen,   "ETTNA1" },
-    { strife,  "AGRDA1" },
+    {doom, "POSSA1"},
+    {heretic, "IMPXA1"},
+    {hexen, "ETTNA1"},
+    {strife, "AGRDA1"},
 };
 
 void W_CheckCorrectIWAD(GameMission_t mission)
@@ -277,17 +277,15 @@ void W_CheckCorrectIWAD(GameMission_t mission)
 
             if (lumpnum >= 0)
             {
-                I_Error("\nYou are trying to use a %s IWAD file with "
-                        "the %s%s binary.\nThis isn't going to work.\n"
-                        "You probably want to use the %s%s binary.",
-                        D_SuggestGameName(unique_lumps[i].mission,
-                                          indetermined),
-                        PROGRAM_PREFIX,
-                        D_GameMissionString(mission),
-                        PROGRAM_PREFIX,
-                        D_GameMissionString(unique_lumps[i].mission));
+                I_Error(
+                    "\nYou are trying to use a %s IWAD file with "
+                    "the %s%s binary.\nThis isn't going to work.\n"
+                    "You probably want to use the %s%s binary.",
+                    D_SuggestGameName(unique_lumps[i].mission, indetermined),
+                    PROGRAM_PREFIX, D_GameMissionString(mission),
+                    PROGRAM_PREFIX,
+                    D_GameMissionString(unique_lumps[i].mission));
             }
         }
     }
 }
-

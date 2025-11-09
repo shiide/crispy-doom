@@ -54,19 +54,16 @@ int winmm_complevel = COMP_STANDARD;
 int winmm_reset_type = RESET_TYPE_GM;
 int winmm_reset_delay = 0;
 
-static const byte gm_system_on[] = {
-    0xF0, 0x7E, 0x7F, 0x09, 0x01, 0xF7
-};
+static const byte gm_system_on[] = {0xF0, 0x7E, 0x7F, 0x09, 0x01, 0xF7};
 
-static const byte gs_reset[] = {
-    0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7
-};
+static const byte gs_reset[] = {0xF0, 0x41, 0x10, 0x42, 0x12, 0x40,
+                                0x00, 0x7F, 0x00, 0x41, 0xF7};
 
-static const byte xg_system_on[] = {
-    0xF0, 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00, 0xF7
-};
+static const byte xg_system_on[] = {0xF0, 0x43, 0x10, 0x4C, 0x00,
+                                    0x00, 0x7E, 0x00, 0xF7};
 
-static const byte ff_loopStart[] = {'l', 'o', 'o', 'p', 'S', 't', 'a', 'r', 't'};
+static const byte ff_loopStart[] = {'l', 'o', 'o', 'p', 'S',
+                                    't', 'a', 'r', 't'};
 static const byte ff_loopEnd[] = {'l', 'o', 'o', 'p', 'E', 'n', 'd'};
 
 static boolean use_fallback;
@@ -157,10 +154,11 @@ static buffer_t buffer;
 
 // Maximum of 4 events in the buffer for faster volume updates.
 
-#define STREAM_MAX_EVENTS   4
+#define STREAM_MAX_EVENTS 4
 
 #define MAKE_EVT(a, b, c, d)                                                   \
-    ((DWORD)(a) | ((DWORD)(b) << 8) | ((DWORD)(c) << 16) | ((DWORD)(d) << 24))
+    ((DWORD) (a) | ((DWORD) (b) << 8) | ((DWORD) (c) << 16) |                  \
+     ((DWORD) (d) << 24))
 
 #define PADDED_SIZE(x) (((x) + sizeof(DWORD) - 1) & ~(sizeof(DWORD) - 1))
 
@@ -214,7 +212,7 @@ static void UnprepareHeader(void)
     MIDIHDR *hdr = &MidiStreamHdr;
     MMRESULT mmr;
 
-    mmr = midiOutUnprepareHeader((HMIDIOUT)hMidiStream, hdr, sizeof(MIDIHDR));
+    mmr = midiOutUnprepareHeader((HMIDIOUT) hMidiStream, hdr, sizeof(MIDIHDR));
     if (mmr != MMSYSERR_NOERROR)
     {
         MidiError("midiOutUnprepareHeader", mmr);
@@ -271,14 +269,14 @@ static void StreamOut(void)
     MMRESULT mmr;
 
     memset(hdr, 0, sizeof(*hdr));
-    hdr->lpData = (LPSTR)buffer.data;
+    hdr->lpData = (LPSTR) buffer.data;
     hdr->dwBytesRecorded = buffer.position;
     hdr->dwBufferLength = buffer.size;
 
     // Reset buffer position even if midiStreamOut fails.
     buffer.position = 0;
 
-    mmr = midiOutPrepareHeader((HMIDIOUT)hMidiStream, hdr, sizeof(MIDIHDR));
+    mmr = midiOutPrepareHeader((HMIDIOUT) hMidiStream, hdr, sizeof(MIDIHDR));
     if (mmr != MMSYSERR_NOERROR)
     {
         MidiError("midiOutPrepareHeader", mmr);
@@ -303,8 +301,9 @@ static void SendShortMsg(unsigned int delta_time, byte status, byte channel,
     native_event_t native_event;
     native_event.dwDeltaTime = delta_time;
     native_event.dwStreamID = 0;
-    native_event.dwEvent = MAKE_EVT(status | channel, param1, param2, MEVT_SHORTMSG);
-    WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+    native_event.dwEvent =
+        MAKE_EVT(status | channel, param1, param2, MEVT_SHORTMSG);
+    WriteBuffer((byte *) &native_event, sizeof(native_event_t));
 }
 
 // Writes a short MIDI message (from an event). Call this function from the MIDI
@@ -328,7 +327,7 @@ static void SendLongMsg(unsigned int delta_time, const byte *ptr,
     native_event.dwDeltaTime = delta_time;
     native_event.dwStreamID = 0;
     native_event.dwEvent = MAKE_EVT(length, 0, 0, MEVT_LONGMSG);
-    WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+    WriteBuffer((byte *) &native_event, sizeof(native_event_t));
     WriteBuffer(ptr, length);
     WriteBufferPad();
 }
@@ -342,8 +341,8 @@ static void SendNullRPN(unsigned int delta_time, const midi_event_t *event)
     const byte channel = event->data.channel.channel;
     SendShortMsg(delta_time, MIDI_EVENT_CONTROLLER, channel,
                  MIDI_CONTROLLER_RPN_LSB, MIDI_RPN_NULL);
-    SendShortMsg(0, MIDI_EVENT_CONTROLLER, channel,
-                 MIDI_CONTROLLER_RPN_MSB, MIDI_RPN_NULL);
+    SendShortMsg(0, MIDI_EVENT_CONTROLLER, channel, MIDI_CONTROLLER_RPN_MSB,
+                 MIDI_RPN_NULL);
 }
 
 // Writes a NOP message (ticks). Call this function from the MIDI thread only,
@@ -355,7 +354,7 @@ static void SendNOPMsg(unsigned int delta_time)
     native_event.dwDeltaTime = delta_time;
     native_event.dwStreamID = 0;
     native_event.dwEvent = MAKE_EVT(0, 0, 0, MEVT_NOP);
-    WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+    WriteBuffer((byte *) &native_event, sizeof(native_event_t));
 }
 
 // Writes a NOP message (milliseconds). Call this function from the MIDI thread
@@ -381,7 +380,7 @@ static void UpdateTempo(unsigned int delta_time, const midi_event_t *event)
     native_event.dwDeltaTime = delta_time;
     native_event.dwStreamID = 0;
     native_event.dwEvent = MAKE_EVT(tempo, 0, 0, MEVT_TEMPO);
-    WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+    WriteBuffer((byte *) &native_event, sizeof(native_event_t));
 }
 
 // Writes a MIDI volume message. The value is scaled by the volume slider. Call
@@ -455,8 +454,10 @@ static void SendNotesSoundOff(void)
 
     for (i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
     {
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_ALL_NOTES_OFF, 0);
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_ALL_SOUND_OFF, 0);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_ALL_NOTES_OFF,
+                     0);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_ALL_SOUND_OFF,
+                     0);
     }
 }
 
@@ -471,10 +472,13 @@ static void ResetControllers(void)
     for (i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
     {
         // Reset commonly used controllers.
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RESET_ALL_CTRLS, 0);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i,
+                     MIDI_CONTROLLER_RESET_ALL_CTRLS, 0);
         SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_PAN, 64);
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_BANK_SELECT_MSB, 0);
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_BANK_SELECT_LSB, 0);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i,
+                     MIDI_CONTROLLER_BANK_SELECT_MSB, 0);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i,
+                     MIDI_CONTROLLER_BANK_SELECT_LSB, 0);
         SendShortMsg(0, MIDI_EVENT_PROGRAM_CHANGE, i, 0, 0);
         SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_REVERB, 40);
         SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_CHORUS, 0);
@@ -496,8 +500,10 @@ static void ResetPitchBendSensitivity(void)
         SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RPN_MSB, 0);
 
         // Reset pitch bend sensitivity to +/- 2 semitones and 0 cents.
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_DATA_ENTRY_MSB, 2);
-        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_DATA_ENTRY_LSB, 0);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i,
+                     MIDI_CONTROLLER_DATA_ENTRY_MSB, 2);
+        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i,
+                     MIDI_CONTROLLER_DATA_ENTRY_LSB, 0);
 
         // Set RPN MSB/LSB to null value after data entry.
         SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RPN_LSB, 127);
@@ -564,15 +570,14 @@ static void ResetDevice(void)
 
 static boolean IsPartLevel(const byte *msg, unsigned int length)
 {
-    if (length == 10 &&
-        msg[0] == 0x41 && // Roland
-        msg[2] == 0x42 && // GS
-        msg[3] == 0x12 && // DT1
-        msg[4] == 0x40 && // Address MSB
-        msg[5] >= 0x10 && // Address
-        msg[5] <= 0x1F && // Address
-        msg[6] == 0x19 && // Address LSB
-        msg[9] == 0xF7)   // SysEx EOX
+    if (length == 10 && msg[0] == 0x41 && // Roland
+        msg[2] == 0x42 &&                 // GS
+        msg[3] == 0x12 &&                 // DT1
+        msg[4] == 0x40 &&                 // Address MSB
+        msg[5] >= 0x10 &&                 // Address
+        msg[5] <= 0x1F &&                 // Address
+        msg[6] == 0x19 &&                 // Address LSB
+        msg[9] == 0xF7)                   // SysEx EOX
     {
         const byte checksum =
             128 - ((int) msg[4] + msg[5] + msg[6] + msg[7]) % 128;
@@ -607,15 +612,14 @@ static boolean IsSysExReset(const byte *msg, unsigned int length)
                 case 0x42: // GS
                     switch (msg[3])
                     {
-                        case 0x12: // DT1
-                            if (length == 10 &&
-                                msg[4] == 0x00 &&  // Address MSB
-                                msg[5] == 0x00 &&  // Address
-                                msg[6] == 0x7F &&  // Address LSB
-                              ((msg[7] == 0x00 &&  // Data     (MODE-1)
-                                msg[8] == 0x01) || // Checksum (MODE-1)
-                               (msg[7] == 0x01 &&  // Data     (MODE-2)
-                                msg[8] == 0x00)))  // Checksum (MODE-2)
+                        case 0x12:                                // DT1
+                            if (length == 10 && msg[4] == 0x00 && // Address MSB
+                                msg[5] == 0x00 &&                 // Address
+                                msg[6] == 0x7F &&                 // Address LSB
+                                ((msg[7] == 0x00 &&  // Data     (MODE-1)
+                                  msg[8] == 0x01) || // Checksum (MODE-1)
+                                 (msg[7] == 0x01 &&  // Data     (MODE-2)
+                                  msg[8] == 0x00)))  // Checksum (MODE-2)
                             {
                                 // SC-88 System Mode Set
                                 // 41 <dev> 42 12 00 00 7F 00 01 F7 (MODE-1)
@@ -656,13 +660,12 @@ static boolean IsSysExReset(const byte *msg, unsigned int length)
                     }
                     break;
 
-                case 0x4C: // XG
-                    if (length == 8 &&
-                        msg[3] == 0x00 &&  // Address High
-                        msg[4] == 0x00 &&  // Address Mid
-                       (msg[5] == 0x7E ||  // Address Low (System On)
-                        msg[5] == 0x7F) && // Address Low (All Parameter Reset)
-                        msg[6] == 0x00)    // Data
+                case 0x4C:                               // XG
+                    if (length == 8 && msg[3] == 0x00 && // Address High
+                        msg[4] == 0x00 &&                // Address Mid
+                        (msg[5] == 0x7E ||  // Address Low (System On)
+                         msg[5] == 0x7F) && // Address Low (All Parameter Reset)
+                        msg[6] == 0x00)     // Data
                     {
                         // XG System On, XG All Parameter Reset
                         // 43 <dev> 4C 00 00 7E 00 F7
@@ -676,11 +679,10 @@ static boolean IsSysExReset(const byte *msg, unsigned int length)
         case 0x7E: // Universal Non-Real Time
             switch (msg[2])
             {
-                case 0x09: // General Midi
-                    if (length == 5 &&
-                       (msg[3] == 0x01 || // GM System On
-                        msg[3] == 0x02 || // GM System Off
-                        msg[3] == 0x03))  // GM2 System On
+                case 0x09:                                // General Midi
+                    if (length == 5 && (msg[3] == 0x01 || // GM System On
+                                        msg[3] == 0x02 || // GM System Off
+                                        msg[3] == 0x03))  // GM2 System On
                     {
                         // GM System On/Off, GM2 System On
                         // 7E <dev> 09 01 F7
@@ -732,7 +734,7 @@ static void SendSysExMsg(unsigned int delta_time, const midi_event_t *event)
     native_event.dwDeltaTime = delta_time;
     native_event.dwStreamID = 0;
     native_event.dwEvent = MAKE_EVT(length + sizeof(byte), 0, 0, MEVT_LONGMSG);
-    WriteBuffer((byte *)&native_event, sizeof(native_event_t));
+    WriteBuffer((byte *) &native_event, sizeof(native_event_t));
     WriteBuffer(&event_type, sizeof(byte));
     WriteBuffer(data, length);
     WriteBufferPad();
@@ -761,7 +763,7 @@ static void SendSysExMsg(unsigned int delta_time, const midi_event_t *event)
 static void SendProgramMsg(unsigned int delta_time, byte channel, byte program,
                            const midi_fallback_t *fallback)
 {
-    switch ((int)fallback->type)
+    switch ((int) fallback->type)
     {
         case FALLBACK_BANK_MSB:
             SendShortMsg(delta_time, MIDI_EVENT_CONTROLLER, channel,
@@ -1378,7 +1380,7 @@ static void FillBuffer(void)
     unsigned int i;
     int num_events;
 
-    for (num_events = 0; num_events < STREAM_MAX_EVENTS; )
+    for (num_events = 0; num_events < STREAM_MAX_EVENTS;)
     {
         midi_event_t *event = NULL;
         win_midi_track_t *track = NULL;
@@ -1415,7 +1417,8 @@ static void FillBuffer(void)
                 {
                     for (i = 0; i < MIDI_CHANNELS_PER_TRACK; ++i)
                     {
-                        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i, MIDI_CONTROLLER_RESET_ALL_CTRLS, 0);
+                        SendShortMsg(0, MIDI_EVENT_CONTROLLER, i,
+                                     MIDI_CONTROLLER_RESET_ALL_CTRLS, 0);
                     }
                     RestartTracks();
                     continue;
@@ -1594,8 +1597,8 @@ static boolean I_WIN_InitMusic(void)
         MidiDevice = MIDI_MAPPER;
     }
 
-    mmr = midiStreamOpen(&hMidiStream, &MidiDevice, (DWORD)1,
-                         (DWORD_PTR)MidiStreamProc, (DWORD_PTR)NULL,
+    mmr = midiStreamOpen(&hMidiStream, &MidiDevice, (DWORD) 1,
+                         (DWORD_PTR) MidiStreamProc, (DWORD_PTR) NULL,
                          CALLBACK_FUNCTION);
     if (mmr != MMSYSERR_NOERROR)
     {
@@ -1632,7 +1635,7 @@ static void I_WIN_SetMusicVolume(int volume)
     last_volume = volume;
 
     EnterCriticalSection(&CriticalSection);
-    volume_factor = sqrtf((float)volume / 120);
+    volume_factor = sqrtf((float) volume / 120);
     update_volume = song.registered;
     LeaveCriticalSection(&CriticalSection);
 }
@@ -1768,7 +1771,7 @@ static void *I_WIN_RegisterSong(void *data, int len)
 
     prop_timediv.cbStruct = sizeof(MIDIPROPTIMEDIV);
     prop_timediv.dwTimeDiv = MIDI_GetFileTimeDivision(file);
-    mmr = midiStreamProperty(hMidiStream, (LPBYTE)&prop_timediv,
+    mmr = midiStreamProperty(hMidiStream, (LPBYTE) &prop_timediv,
                              MIDIPROP_SET | MIDIPROP_TIMEDIV);
     if (mmr != MMSYSERR_NOERROR)
     {
@@ -1780,7 +1783,7 @@ static void *I_WIN_RegisterSong(void *data, int len)
     // Set initial tempo.
     prop_tempo.cbStruct = sizeof(MIDIPROPTIMEDIV);
     prop_tempo.dwTempo = 500000; // 120 BPM
-    mmr = midiStreamProperty(hMidiStream, (LPBYTE)&prop_tempo,
+    mmr = midiStreamProperty(hMidiStream, (LPBYTE) &prop_tempo,
                              MIDIPROP_SET | MIDIPROP_TEMPO);
     if (mmr != MMSYSERR_NOERROR)
     {
@@ -1884,17 +1887,12 @@ static boolean I_WIN_MusicIsPlaying(void)
     return (song.num_tracks > 0);
 }
 
-static const snddevice_t music_win_devices[] =
-{
-    SNDDEVICE_PAS,
-    SNDDEVICE_WAVEBLASTER,
-    SNDDEVICE_SOUNDCANVAS,
-    SNDDEVICE_GENMIDI,
-    SNDDEVICE_AWE32,
+static const snddevice_t music_win_devices[] = {
+    SNDDEVICE_PAS,     SNDDEVICE_WAVEBLASTER, SNDDEVICE_SOUNDCANVAS,
+    SNDDEVICE_GENMIDI, SNDDEVICE_AWE32,
 };
 
-const music_module_t music_win_module =
-{
+const music_module_t music_win_module = {
     music_win_devices,
     arrlen(music_win_devices),
     I_WIN_InitMusic,
@@ -1907,7 +1905,7 @@ const music_module_t music_win_module =
     I_WIN_PlaySong,
     I_WIN_StopSong,
     I_WIN_MusicIsPlaying,
-    NULL,  // Poll
+    NULL, // Poll
 };
 
 #endif
