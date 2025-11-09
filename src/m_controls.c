@@ -32,7 +32,7 @@ int key_reverse = 0; // [crispy]
 
 int key_up = KEY_UPARROW;
 int key_alt_up = 'w'; // [crispy]
-int key_down = KEY_DOWNARROW; 
+int key_down = KEY_DOWNARROW;
 int key_alt_down = 's'; // [crispy]
 int key_strafeleft = ',';
 int key_alt_strafeleft = 'a'; // [crispy]
@@ -41,15 +41,15 @@ int key_alt_straferight = 'd'; // [crispy]
 int key_fire = KEY_RCTRL;
 int key_use = ' ';
 int key_strafe = KEY_RALT;
-int key_speed = KEY_RSHIFT; 
+int key_speed = KEY_RSHIFT;
 int key_demospeed = KEYP_PLUS; // [crispy]
 int key_toggleautorun = KEY_CAPSLOCK; // [crispy]
 int key_togglenovert = 0; // [crispy]
 
-// 
+//
 // Heretic keyboard controls
 //
- 
+
 int key_flyup = KEY_PGUP;
 int key_flydown = KEY_INS;
 int key_flycenter = KEY_HOME;
@@ -240,12 +240,12 @@ int joybflyup = -1;
 int joybflydown = -1;
 int joybflycenter = -1;
 
-// Control whether if a mouse button is double clicked, it acts like 
+// Control whether if a mouse button is double clicked, it acts like
 // "use" has been pressed
 
 int dclick_use = 1;
- 
-// 
+
+//
 // Bind all of the common controls used by Doom and all other games.
 //
 

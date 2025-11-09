@@ -75,7 +75,7 @@ STlib_initNum
 }
 
 
-// 
+//
 // A fairly efficient way to draw a number
 //  based on differences from the old number.
 // Note: worth the trouble?
@@ -88,11 +88,11 @@ STlib_drawNum
 
     int		numdigits = n->width;
     int		num = *n->num;
-    
+
     int		w = SHORT(n->p[0]->width);
     int		h = SHORT(n->p[0]->height);
     int		x = n->x;
-    
+
     int		neg;
 
     // [crispy] redraw only if necessary
@@ -111,7 +111,7 @@ STlib_drawNum
 	    num = -9;
 	else if (numdigits == 3 && num < -99)
 	    num = -99;
-	
+
 	num = -num;
     }
 

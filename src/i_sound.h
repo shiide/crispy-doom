@@ -29,7 +29,7 @@
 //
 // SoundFX struct.
 //
-typedef struct sfxinfo_struct	sfxinfo_t;
+typedef struct sfxinfo_struct sfxinfo_t;
 
 struct sfxinfo_struct
 {
@@ -61,7 +61,7 @@ struct sfxinfo_struct
     // lump number of sfx
     int lumpnum;
 
-    // Maximum number of channels that the sound can be played on 
+    // Maximum number of channels that the sound can be played on
     // (Heretic)
     int numchannels;
 
@@ -88,7 +88,7 @@ typedef struct
 
 } musicinfo_t;
 
-typedef enum 
+typedef enum
 {
     SNDDEVICE_NONE = 0,
     SNDDEVICE_PCSPEAKER = 1,
@@ -137,7 +137,8 @@ typedef struct
     // Start a sound on a given channel.  Returns the channel id
     // or -1 on failure.
 
-    int (*StartSound)(sfxinfo_t *sfxinfo, int channel, int vol, int sep, int pitch);
+    int (*StartSound)(sfxinfo_t *sfxinfo, int channel, int vol, int sep,
+                      int pitch);
 
     // Stop the sound playing on the given channel.
 
@@ -246,10 +247,11 @@ extern float libsamplerate_scale;
 void I_BindSoundVariables(void);
 
 // DMX version to emulate for OPL emulation:
-typedef enum {
-    opl_doom1_1_666,    // Doom 1 v1.666
-    opl_doom2_1_666,    // Doom 2 v1.666, Hexen, Heretic
-    opl_doom_1_9        // Doom v1.9, Strife
+typedef enum
+{
+    opl_doom1_1_666, // Doom 1 v1.666
+    opl_doom2_1_666, // Doom 2 v1.666, Hexen, Heretic
+    opl_doom_1_9     // Doom v1.9, Strife
 } opl_driver_ver_t;
 
 void I_SetOPLDriverVer(opl_driver_ver_t ver);
