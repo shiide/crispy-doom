@@ -33,7 +33,7 @@ static deh_mapping_entry_t *GetMappingEntryByName(deh_context_t *context,
 {
     int i;
 
-    for (i=0; mapping->entries[i].name != NULL; ++i)
+    for (i = 0; mapping->entries[i].name != NULL; ++i)
     {
         deh_mapping_entry_t *entry = &mapping->entries[i];
 
@@ -60,15 +60,14 @@ static deh_mapping_entry_t *GetMappingEntryByName(deh_context_t *context,
 // Get the location of the specified field in the specified structure.
 //
 
-static void *GetStructField(void *structptr,
-                            deh_mapping_t *mapping,
+static void *GetStructField(void *structptr, deh_mapping_t *mapping,
                             deh_mapping_entry_t *entry)
 {
     unsigned int offset;
 
-    offset = (uint8_t *)entry->location - (uint8_t *)mapping->base;
+    offset = (uint8_t *) entry->location - (uint8_t *) mapping->base;
 
-    return (uint8_t *)structptr + offset;
+    return (uint8_t *) structptr + offset;
 }
 
 //
@@ -106,13 +105,13 @@ boolean DEH_SetMapping(deh_context_t *context, deh_mapping_t *mapping,
     switch (entry->size)
     {
         case 1:
-            * ((uint8_t *) location) = value;
+            *((uint8_t *) location) = value;
             break;
         case 2:
-            * ((uint16_t *) location) = value;
+            *((uint16_t *) location) = value;
             break;
         case 4:
-            * ((uint32_t *) location) = value;
+            *((uint32_t *) location) = value;
             break;
         default:
             DEH_Error(context, "Unknown field type for '%s' (BUG)", name);
@@ -163,7 +162,7 @@ void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
 
     // Go through each mapping
 
-    for (i=0; mapping->entries[i].name != NULL; ++i)
+    for (i = 0; mapping->entries[i].name != NULL; ++i)
     {
         deh_mapping_entry_t *entry = &mapping->entries[i];
         void *location;
@@ -177,7 +176,8 @@ void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
 
         // Add in data for this field
 
-        location = (uint8_t *)structptr + ((uint8_t *)entry->location - (uint8_t *)mapping->base);
+        location = (uint8_t *) structptr +
+                   ((uint8_t *) entry->location - (uint8_t *) mapping->base);
 
         switch (entry->size)
         {
@@ -197,4 +197,3 @@ void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
         }
     }
 }
-

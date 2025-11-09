@@ -77,7 +77,7 @@ static void *DEH_TextStart(deh_context_t *context, char *line)
 
     // read in the "from" text
 
-    for (i=0; i<fromlen; ++i)
+    for (i = 0; i < fromlen; ++i)
     {
         from_text[i] = DEH_GetChar(context);
     }
@@ -85,7 +85,7 @@ static void *DEH_TextStart(deh_context_t *context, char *line)
 
     // read in the "to" text
 
-    for (i=0; i<tolen; ++i)
+    for (i = 0; i < tolen; ++i)
     {
         to_text[i] = DEH_GetChar(context);
     }
@@ -93,7 +93,7 @@ static void *DEH_TextStart(deh_context_t *context, char *line)
 
     if (!bex_notext)
     {
-    DEH_AddStringReplacement(from_text, to_text);
+        DEH_AddStringReplacement(from_text, to_text);
     }
 
     free(from_text);
@@ -107,13 +107,6 @@ static void DEH_TextParseLine(deh_context_t *context, char *line, void *tag)
     // not used
 }
 
-deh_section_t deh_section_text =
-{
-    "Text",
-    NULL,
-    DEH_TextStart,
-    DEH_TextParseLine,
-    NULL,
-    NULL,
+deh_section_t deh_section_text = {
+    "Text", NULL, DEH_TextStart, DEH_TextParseLine, NULL, NULL,
 };
-

@@ -54,14 +54,14 @@ typedef struct
 void D_RegisterLoopCallbacks(loop_interface_t *i);
 
 // Create any new ticcmds and broadcast to other players.
-void NetUpdate (void);
+void NetUpdate(void);
 
 // Broadcasts special packets to other players
 //  to notify of game exit
-void D_QuitNetGame (void);
+void D_QuitNetGame(void);
 
 //? how many ticks to run?
-void TryRunTics (void);
+void TryRunTics(void);
 
 // Called at start of game loop to initialize timers
 void D_StartGameLoop(void);
@@ -94,4 +94,3 @@ extern fixed_t offsetms;
 
 
 #endif
-

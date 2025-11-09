@@ -74,7 +74,7 @@ void DEH_Checksum(sha1_digest_t digest)
 
     SHA1_Init(&sha1_context);
 
-    for (i=0; deh_section_types[i] != NULL; ++i)
+    for (i = 0; deh_section_types[i] != NULL; ++i)
     {
         if (deh_section_types[i]->sha1_hash != NULL)
         {
@@ -91,7 +91,7 @@ static void InitializeSections(void)
 {
     unsigned int i;
 
-    for (i=0; deh_section_types[i] != NULL; ++i)
+    for (i = 0; deh_section_types[i] != NULL; ++i)
     {
         if (deh_section_types[i]->init != NULL)
         {
@@ -110,7 +110,7 @@ void DEH_Init(void) // [crispy] un-static
 
     if (M_CheckParm("-nocheats") > 0)
     {
-	deh_apply_cheats = false;
+        deh_apply_cheats = false;
     }
 
     // Call init functions for all the section definitions.
@@ -133,7 +133,7 @@ static deh_section_t *GetSectionByName(char *name)
         return NULL;
     }
 
-    for (i=0; deh_section_types[i] != NULL; ++i)
+    for (i = 0; deh_section_types[i] != NULL; ++i)
     {
         if (!strcasecmp(deh_section_types[i]->name, name))
         {
@@ -212,13 +212,13 @@ boolean DEH_ParseAssignment(char *line, char **variable_name, char **value)
 
     // value immediately follows the '='
 
-    *value = CleanString(p+1);
+    *value = CleanString(p + 1);
 
     return true;
 }
 
-extern void DEH_SaveLineStart (deh_context_t *context);
-extern void DEH_RestoreLineStart (deh_context_t *context);
+extern void DEH_SaveLineStart(deh_context_t *context);
+extern void DEH_RestoreLineStart(deh_context_t *context);
 
 static boolean CheckSignatures(deh_context_t *context)
 {
@@ -239,7 +239,7 @@ static boolean CheckSignatures(deh_context_t *context)
 
     // Check all signatures to see if one matches
 
-    for (i=0; deh_signatures[i] != NULL; ++i)
+    for (i = 0; deh_signatures[i] != NULL; ++i)
     {
         if (!strcmp(deh_signatures[i], line))
         {
@@ -308,7 +308,8 @@ static void DEH_ParseComment(char *comment)
 static void DEH_ParseContext(deh_context_t *context)
 {
     deh_section_t *current_section = NULL;
-    deh_section_t *prev_section = NULL; // [crispy] remember previous line parser
+    deh_section_t *prev_section =
+        NULL; // [crispy] remember previous line parser
     char section_name[20];
     void *tag = NULL;
     boolean extended;
@@ -328,8 +329,8 @@ static void DEH_ParseContext(deh_context_t *context)
     {
         // Read the next line. We only allow the special extended parsing
         // for the BEX [STRINGS] section.
-        extended = current_section != NULL
-                && !strcasecmp(current_section->name, "[STRINGS]");
+        extended = current_section != NULL &&
+                   !strcasecmp(current_section->name, "[STRINGS]");
         // [crispy] save pointer to start of line, just in case
         DEH_SaveLineStart(context);
         line = DEH_ReadLine(context, extended);
@@ -399,8 +400,7 @@ static void DEH_ParseContext(deh_context_t *context)
                     tag = current_section->start(context, line);
                     //printf("started %s tag\n", section_name);
                 }
-                else
-                if (prev_section != NULL)
+                else if (prev_section != NULL)
                 {
                     // [crispy] try this line again with the previous line parser
                     DEH_RestoreLineStart(context);
@@ -431,7 +431,7 @@ int DEH_LoadFile(const char *filename)
     // Magic comments should only apply to the file in which they were
     // defined, and shouldn't carry over to subsequent files as well.
     // [crispy] always allow everything
-/*
+    /*
     deh_allow_long_strings = false;
     deh_allow_long_cheats = false;
     deh_allow_extended_strings = false;
@@ -467,8 +467,8 @@ void DEH_AutoLoadPatches(const char *path)
     const char *filename;
     glob_t *glob;
 
-    glob = I_StartMultiGlob(path, GLOB_FLAG_NOCASE|GLOB_FLAG_SORTED,
-                            "*.deh", "*.bex", "*.hhe", "*.seh", NULL); // [crispy] *.bex
+    glob = I_StartMultiGlob(path, GLOB_FLAG_NOCASE | GLOB_FLAG_SORTED, "*.deh",
+                            "*.bex", "*.hhe", "*.seh", NULL); // [crispy] *.bex
     for (;;)
     {
         filename = I_NextGlob(glob);
@@ -497,7 +497,7 @@ int DEH_LoadLump(int lumpnum, boolean allow_long, boolean allow_error)
 
     // Reset all special flags to defaults.
     // [crispy] always allow everything
-/*
+    /*
     deh_allow_long_strings = allow_long;
     deh_allow_long_cheats = allow_long;
     deh_allow_extended_strings = false;
@@ -525,7 +525,8 @@ int DEH_LoadLump(int lumpnum, boolean allow_long, boolean allow_error)
     return 1;
 }
 
-int DEH_LoadLumpByName(const char *name, boolean allow_long, boolean allow_error)
+int DEH_LoadLumpByName(const char *name, boolean allow_long,
+                       boolean allow_error)
 {
     int lumpnum;
 
@@ -568,4 +569,3 @@ void DEH_ParseCommandLine(void)
         }
     }
 }
-

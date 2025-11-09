@@ -58,7 +58,7 @@ static deh_substitution_t *SubstitutionForString(const char *s)
 
     // Fallback if we have not initialized the hash table yet
     if (hash_table_length < 0)
-	return NULL;
+        return NULL;
 
     entry = strhash(s) % hash_table_length;
 
@@ -136,7 +136,7 @@ static void IncreaseHashtable(void)
 
     // go through the old table and insert all the old entries
 
-    for (i=0; i<old_table_length; ++i)
+    for (i = 0; i < old_table_length; ++i)
     {
         if (old_table[i] != NULL)
         {
@@ -231,17 +231,30 @@ static format_arg_t FormatArgumentType(char c)
 {
     switch (c)
     {
-        case 'd': case 'i': case 'o': case 'u': case 'x': case 'X':
+        case 'd':
+        case 'i':
+        case 'o':
+        case 'u':
+        case 'x':
+        case 'X':
             return FORMAT_ARG_INT;
 
-        case 'e': case 'E': case 'f': case 'F': case 'g': case 'G':
-        case 'a': case 'A':
+        case 'e':
+        case 'E':
+        case 'f':
+        case 'F':
+        case 'g':
+        case 'G':
+        case 'a':
+        case 'A':
             return FORMAT_ARG_FLOAT;
 
-        case 'c': case 'C':
+        case 'c':
+        case 'C':
             return FORMAT_ARG_CHAR;
 
-        case 's': case 'S':
+        case 's':
+        case 'S':
             return FORMAT_ARG_STRING;
 
         case 'p':
@@ -333,7 +346,8 @@ static boolean ValidArgumentReplacement(format_arg_t original,
 
 // Return true if the specified string contains no format arguments.
 
-static boolean ValidFormatReplacement(const char *original, const char *replacement)
+static boolean ValidFormatReplacement(const char *original,
+                                      const char *replacement)
 {
     const char *rover1;
     const char *rover2;
@@ -341,7 +355,8 @@ static boolean ValidFormatReplacement(const char *original, const char *replacem
 
     // Check each argument in turn and compare types.
 
-    rover1 = original; rover2 = replacement;
+    rover1 = original;
+    rover2 = replacement;
 
     for (;;)
     {
@@ -382,7 +397,8 @@ static const char *FormatStringReplacement(const char *s)
     if (!ValidFormatReplacement(s, repl))
     {
         printf("WARNING: Unsafe dehacked replacement provided for "
-               "printf format string: %s\n", s);
+               "printf format string: %s\n",
+               s);
 
         return s;
     }
@@ -437,4 +453,3 @@ void DEH_snprintf(char *buffer, size_t len, const char *fmt, ...)
 
     va_end(args);
 }
-
