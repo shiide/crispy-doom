@@ -135,21 +135,21 @@ static struct
     const char *deh_name;
     int *value;
 } misc_settings[] = {
-    {"Initial Health",      &deh_initial_health},
-    {"Initial Bullets",     &deh_initial_bullets},
-    {"Max Health",          &deh_max_health},
-    {"Max Armor",           &deh_max_armor},
-    {"Green Armor Class",   &deh_green_armor_class},
-    {"Blue Armor Class",    &deh_blue_armor_class},
-    {"Max Soulsphere",      &deh_max_soulsphere},
-    {"Soulsphere Health",   &deh_soulsphere_health},
-    {"Megasphere Health",   &deh_megasphere_health},
-    {"God Mode Health",     &deh_god_mode_health},
-    {"IDFA Armor",          &deh_idfa_armor},
-    {"IDFA Armor Class",    &deh_idfa_armor_class},
-    {"IDKFA Armor",         &deh_idkfa_armor},
-    {"IDKFA Armor Class",   &deh_idkfa_armor_class},
-    {"BFG Cells/Shot",      &deh_bfg_cells_per_shot},
+    {"Initial Health", &deh_initial_health},
+    {"Initial Bullets", &deh_initial_bullets},
+    {"Max Health", &deh_max_health},
+    {"Max Armor", &deh_max_armor},
+    {"Green Armor Class", &deh_green_armor_class},
+    {"Blue Armor Class", &deh_blue_armor_class},
+    {"Max Soulsphere", &deh_max_soulsphere},
+    {"Soulsphere Health", &deh_soulsphere_health},
+    {"Megasphere Health", &deh_megasphere_health},
+    {"God Mode Health", &deh_god_mode_health},
+    {"IDFA Armor", &deh_idfa_armor},
+    {"IDFA Armor Class", &deh_idfa_armor_class},
+    {"IDKFA Armor", &deh_idkfa_armor},
+    {"IDKFA Armor Class", &deh_idkfa_armor_class},
+    {"BFG Cells/Shot", &deh_bfg_cells_per_shot},
 };
 
 static void *DEH_MiscStart(deh_context_t *context, char *line)
@@ -187,14 +187,14 @@ static void DEH_MiscParseLine(deh_context_t *context, char *line, void *tag)
         }
         else
         {
-            DEH_Warning(context,
-                        "Invalid value for 'Monsters Infight': %i", ivalue);
+            DEH_Warning(context, "Invalid value for 'Monsters Infight': %i",
+                        ivalue);
         }
 
         return;
     }
 
-    for (i=0; i<arrlen(misc_settings); ++i)
+    for (i = 0; i < arrlen(misc_settings); ++i)
     {
         if (!strcasecmp(variable_name, misc_settings[i].deh_name))
         {
@@ -210,19 +210,12 @@ static void DEH_MiscSHA1Sum(sha1_context_t *context)
 {
     unsigned int i;
 
-    for (i=0; i<arrlen(misc_settings); ++i)
+    for (i = 0; i < arrlen(misc_settings); ++i)
     {
         SHA1_UpdateInt32(context, *misc_settings[i].value);
     }
 }
 
-deh_section_t deh_section_misc =
-{
-    "Misc",
-    NULL,
-    DEH_MiscStart,
-    DEH_MiscParseLine,
-    NULL,
-    DEH_MiscSHA1Sum,
+deh_section_t deh_section_misc = {
+    "Misc", NULL, DEH_MiscStart, DEH_MiscParseLine, NULL, DEH_MiscSHA1Sum,
 };
-

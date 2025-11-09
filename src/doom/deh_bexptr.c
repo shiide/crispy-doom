@@ -115,7 +115,8 @@ extern void A_PlaySound();
 extern void A_RandomJump();
 extern void A_LineEffect();
 
-typedef struct {
+typedef struct
+{
     const char *mnemonic;
     const actionf_t pointer;
 } bex_codeptr_t;
@@ -221,7 +222,7 @@ static void *DEH_BEXPtrStart(deh_context_t *context, char *line)
 
     if (sscanf(line, "%9s", s) == 0 || strcmp("[CODEPTR]", s))
     {
-	DEH_Warning(context, "Parse error on section start");
+        DEH_Warning(context, "Parse error on section start");
     }
 
     return NULL;
@@ -237,44 +238,38 @@ static void DEH_BEXPtrParseLine(deh_context_t *context, char *line, void *tag)
     // variable_name = "FRAME nn" and value = "mnemonic"
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
-	DEH_Warning(context, "Failed to parse assignment: %s", line);
-	return;
+        DEH_Warning(context, "Failed to parse assignment: %s", line);
+        return;
     }
 
     // parse "FRAME nn", where frame_number = "nn"
     if (sscanf(variable_name, "%5s %32d", frame_str, &frame_number) != 2 ||
         strcasecmp(frame_str, "FRAME"))
     {
-	DEH_Warning(context, "Failed to parse assignment: %s", variable_name);
-	return;
+        DEH_Warning(context, "Failed to parse assignment: %s", variable_name);
+        return;
     }
 
     if (frame_number < 0 || frame_number >= NUMSTATES)
     {
-	DEH_Warning(context, "Invalid frame number: %i", frame_number);
-	return;
+        DEH_Warning(context, "Invalid frame number: %i", frame_number);
+        return;
     }
 
     state = (state_t *) &states[frame_number];
 
     for (i = 0; i < arrlen(bex_codeptrtable); i++)
     {
-	if (!strcasecmp(bex_codeptrtable[i].mnemonic, value))
-	{
-	    state->action = bex_codeptrtable[i].pointer;
-	    return;
-	}
+        if (!strcasecmp(bex_codeptrtable[i].mnemonic, value))
+        {
+            state->action = bex_codeptrtable[i].pointer;
+            return;
+        }
     }
 
     DEH_Warning(context, "Invalid mnemonic '%s'", value);
 }
 
-deh_section_t deh_section_bexptr =
-{
-    "[CODEPTR]",
-    NULL,
-    DEH_BEXPtrStart,
-    DEH_BEXPtrParseLine,
-    NULL,
-    NULL,
+deh_section_t deh_section_bexptr = {
+    "[CODEPTR]", NULL, DEH_BEXPtrStart, DEH_BEXPtrParseLine, NULL, NULL,
 };

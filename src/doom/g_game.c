@@ -16,7 +16,6 @@
 //
 
 
-
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
@@ -74,7 +73,6 @@
 #include "r_sky.h"
 
 
-
 #include "g_game.h"
 #include "v_trans.h" // [crispy] colored "always run" message
 
@@ -83,103 +81,96 @@
 
 #include "d_pwad.h" // [crispy] kex secret level
 
-#define SAVEGAMESIZE	0x2c000
+#define SAVEGAMESIZE 0x2c000
 
-void	G_ReadDemoTiccmd (ticcmd_t* cmd);
-void	G_WriteDemoTiccmd (ticcmd_t* cmd);
-void	G_PlayerReborn (int player);
+void G_ReadDemoTiccmd(ticcmd_t *cmd);
+void G_WriteDemoTiccmd(ticcmd_t *cmd);
+void G_PlayerReborn(int player);
 
-void	G_DoReborn (int playernum);
+void G_DoReborn(int playernum);
 
-void	G_DoLoadLevel (void);
-void	G_DoNewGame (void);
-void	G_DoCompleted (void);
-void	G_DoVictory (void);
-void	G_DoWorldDone (void);
-void	G_DoSaveGame (void);
+void G_DoLoadLevel(void);
+void G_DoNewGame(void);
+void G_DoCompleted(void);
+void G_DoVictory(void);
+void G_DoWorldDone(void);
+void G_DoSaveGame(void);
 
 // Gamestate the last time G_Ticker was called.
 
-gamestate_t     oldgamestate;
+gamestate_t oldgamestate;
 
-gameaction_t    gameaction;
-gamestate_t     gamestate;
-skill_t         gameskill;
-boolean		respawnmonsters;
-int             gameepisode;
-int             gamemap;
+gameaction_t gameaction;
+gamestate_t gamestate;
+skill_t gameskill;
+boolean respawnmonsters;
+int gameepisode;
+int gamemap;
 
 // If non-zero, exit the level after this number of minutes.
 
-int             timelimit;
+int timelimit;
 
-boolean         paused;
-boolean         sendpause;             	// send a pause event next tic
-boolean         sendsave;             	// send a save event next tic
-boolean         usergame;               // ok to save / end game
+boolean paused;
+boolean sendpause; // send a pause event next tic
+boolean sendsave;  // send a save event next tic
+boolean usergame;  // ok to save / end game
 
-boolean         timingdemo;             // if true, exit with report on completion
-boolean         nodrawers;              // for comparative timing purposes
-int             starttime;          	// for comparative timing purposes
+boolean timingdemo; // if true, exit with report on completion
+boolean nodrawers;  // for comparative timing purposes
+int starttime;      // for comparative timing purposes
 
-boolean         viewactive;
+boolean viewactive;
 
-int             deathmatch;           	// only if started as net death
-boolean         netgame;                // only true if packets are broadcast
-boolean         playeringame[MAXPLAYERS];
-player_t        players[MAXPLAYERS];
+int deathmatch;  // only if started as net death
+boolean netgame; // only true if packets are broadcast
+boolean playeringame[MAXPLAYERS];
+player_t players[MAXPLAYERS];
 
-boolean         turbodetected[MAXPLAYERS];
+boolean turbodetected[MAXPLAYERS];
 
-int             consoleplayer;          // player taking events and displaying
-int             displayplayer;          // view being displayed
-int             levelstarttic;          // gametic at level start
-int             totalkills, totalitems, totalsecret;    // for intermission
-int             extrakills;             // [crispy] count spawned monsters
-int             totalleveltimes;        // [crispy] CPhipps - total time for all completed levels
-int             demostarttic;           // [crispy] fix revenant internal demo bug
+int consoleplayer;                       // player taking events and displaying
+int displayplayer;                       // view being displayed
+int levelstarttic;                       // gametic at level start
+int totalkills, totalitems, totalsecret; // for intermission
+int extrakills;                          // [crispy] count spawned monsters
+int totalleveltimes; // [crispy] CPhipps - total time for all completed levels
+int demostarttic;    // [crispy] fix revenant internal demo bug
 
-char           *demoname;
-const char     *orig_demoname; // [crispy] the name originally chosen for the demo, i.e. without "-00000"
-boolean         demorecording;
-boolean         longtics;               // cph's doom 1.91 longtics hack
-boolean         lowres_turn;            // low resolution turning for longtics
-boolean         demoplayback;
-boolean		netdemo;
-byte*		demobuffer;
-byte*		demo_p;
-byte*		demoend;
-boolean         singledemo;            	// quit after playing a demo from cmdline
+char *demoname;
+const char *
+    orig_demoname; // [crispy] the name originally chosen for the demo, i.e. without "-00000"
+boolean demorecording;
+boolean longtics;    // cph's doom 1.91 longtics hack
+boolean lowres_turn; // low resolution turning for longtics
+boolean demoplayback;
+boolean netdemo;
+byte *demobuffer;
+byte *demo_p;
+byte *demoend;
+boolean singledemo; // quit after playing a demo from cmdline
 
-boolean         precache = true;        // if true, load all graphics at start
+boolean precache = true; // if true, load all graphics at start
 
-boolean         testcontrols = false;    // Invoked by setup to test controls
-int             testcontrols_mousespeed;
+boolean testcontrols = false; // Invoked by setup to test controls
+int testcontrols_mousespeed;
 
 
+wbstartstruct_t wminfo; // parms for world map / intermission
 
-wbstartstruct_t wminfo;               	// parms for world map / intermission
+byte consistancy[MAXPLAYERS][BACKUPTICS];
 
-byte		consistancy[MAXPLAYERS][BACKUPTICS];
+#define MAXPLMOVE (forwardmove[1])
 
-#define MAXPLMOVE		(forwardmove[1])
+#define TURBOTHRESHOLD 0x32
 
-#define TURBOTHRESHOLD	0x32
+fixed_t forwardmove[2] = {0x19, 0x32};
+fixed_t sidemove[2] = {0x18, 0x28};
+fixed_t angleturn[3] = {640, 1280, 320}; // + slow turn
 
-fixed_t         forwardmove[2] = {0x19, 0x32};
-fixed_t         sidemove[2] = {0x18, 0x28};
-fixed_t         angleturn[3] = {640, 1280, 320};    // + slow turn
-
-static int *weapon_keys[] = {
-    &key_weapon1,
-    &key_weapon2,
-    &key_weapon3,
-    &key_weapon4,
-    &key_weapon5,
-    &key_weapon6,
-    &key_weapon7,
-    &key_weapon8
-};
+static int *weapon_keys[] = {&key_weapon1, &key_weapon2, &key_weapon3,
+                             &key_weapon4, &key_weapon5, &key_weapon6,
+                             &key_weapon7, &key_weapon8};
 
 // Set to -1 or +1 to switch to the previous or next weapon.
 
@@ -191,33 +182,31 @@ static const struct
 {
     weapontype_t weapon;
     weapontype_t weapon_num;
-} weapon_order_table[] = {
-    { wp_fist,            wp_fist },
-    { wp_chainsaw,        wp_fist },
-    { wp_pistol,          wp_pistol },
-    { wp_shotgun,         wp_shotgun },
-    { wp_supershotgun,    wp_shotgun },
-    { wp_chaingun,        wp_chaingun },
-    { wp_missile,         wp_missile },
-    { wp_plasma,          wp_plasma },
-    { wp_bfg,             wp_bfg }
-};
+} weapon_order_table[] = {{wp_fist, wp_fist},
+                          {wp_chainsaw, wp_fist},
+                          {wp_pistol, wp_pistol},
+                          {wp_shotgun, wp_shotgun},
+                          {wp_supershotgun, wp_shotgun},
+                          {wp_chaingun, wp_chaingun},
+                          {wp_missile, wp_missile},
+                          {wp_plasma, wp_plasma},
+                          {wp_bfg, wp_bfg}};
 
-#define SLOWTURNTICS	6
+#define SLOWTURNTICS 6
 
-#define NUMKEYS		256
+#define NUMKEYS         256
 #define MAX_JOY_BUTTONS 20
 
-static boolean  gamekeydown[NUMKEYS];
-static int      turnheld;		// for accelerative turning
-static int      lookheld;		// [crispy] for accelerative looking
+static boolean gamekeydown[NUMKEYS];
+static int turnheld; // for accelerative turning
+static int lookheld; // [crispy] for accelerative looking
 
-static boolean  mousearray[MAX_MOUSE_BUTTONS + 1];
-static boolean *mousebuttons = &mousearray[1];  // allow [-1]
+static boolean mousearray[MAX_MOUSE_BUTTONS + 1];
+static boolean *mousebuttons = &mousearray[1]; // allow [-1]
 
 // mouse values are used once
-int             mousex;
-int             mousey;
+int mousex;
+int mousey;
 
 // [crispy] for rounding error
 typedef struct carry_s
@@ -231,45 +220,45 @@ typedef struct carry_s
 static carry_t prevcarry;
 static carry_t carry;
 
-static int      dclicktime;
-static boolean  dclickstate;
-static int      dclicks;
-static int      dclicktime2;
-static boolean  dclickstate2;
-static int      dclicks2;
+static int dclicktime;
+static boolean dclickstate;
+static int dclicks;
+static int dclicktime2;
+static boolean dclickstate2;
+static int dclicks2;
 
 // joystick values are repeated
-static int      joyxmove;
-static int      joyymove;
-static int      joystrafemove;
-static int      joylook; // [crispy]
-static boolean  joyarray[MAX_JOY_BUTTONS + 1];
-static boolean *joybuttons = &joyarray[1];		// allow [-1]
+static int joyxmove;
+static int joyymove;
+static int joystrafemove;
+static int joylook; // [crispy]
+static boolean joyarray[MAX_JOY_BUTTONS + 1];
+static boolean *joybuttons = &joyarray[1]; // allow [-1]
 
-static char     savename[256]; // [crispy] moved here, made static
-static int      savegameslot;
-static char     savedescription[32];
+static char savename[256]; // [crispy] moved here, made static
+static int savegameslot;
+static char savedescription[32];
 
 static ticcmd_t basecmd; // [crispy]
 
-#define	BODYQUESIZE	32
+#define BODYQUESIZE 32
 
-mobj_t*		bodyque[BODYQUESIZE];
-int		bodyqueslot;
+mobj_t *bodyque[BODYQUESIZE];
+int bodyqueslot;
 
-int             vanilla_savegame_limit = 1;
-int             vanilla_demo_limit = 1;
+int vanilla_savegame_limit = 1;
+int vanilla_demo_limit = 1;
 
 // [crispy] store last cmd to track joins
-static ticcmd_t* last_cmd = NULL;
+static ticcmd_t *last_cmd = NULL;
 
-int G_CmdChecksum (ticcmd_t* cmd)
+int G_CmdChecksum(ticcmd_t *cmd)
 {
-    size_t		i;
-    int		sum = 0;
+    size_t i;
+    int sum = 0;
 
-    for (i=0 ; i< sizeof(*cmd)/4 - 1 ; i++)
-	sum += ((int *)cmd)[i];
+    for (i = 0; i < sizeof(*cmd) / 4 - 1; i++)
+        sum += ((int *) cmd)[i];
 
     return sum;
 }
@@ -285,8 +274,8 @@ static boolean WeaponSelectable(weapontype_t weapon)
 
     // These weapons aren't available in shareware.
 
-    if ((weapon == wp_plasma || weapon == wp_bfg)
-     && gamemission == doom && gamemode == shareware)
+    if ((weapon == wp_plasma || weapon == wp_bfg) && gamemission == doom &&
+        gamemode == shareware)
     {
         return false;
     }
@@ -301,9 +290,8 @@ static boolean WeaponSelectable(weapontype_t weapon)
     // Can't select the fist if we have the chainsaw, unless
     // we also have the berserk pack.
 
-    if (weapon == wp_fist
-     && players[consoleplayer].weaponowned[wp_chainsaw]
-     && !players[consoleplayer].powers[pw_strength])
+    if (weapon == wp_fist && players[consoleplayer].weaponowned[wp_chainsaw] &&
+        !players[consoleplayer].powers[pw_strength])
     {
         return false;
     }
@@ -327,7 +315,7 @@ static int G_NextWeapon(int direction)
         weapon = players[consoleplayer].pendingweapon;
     }
 
-    for (i=0; i<arrlen(weapon_order_table); ++i)
+    for (i = 0; i < arrlen(weapon_order_table); ++i)
     {
         if (weapon_order_table[i].weapon == weapon)
         {
@@ -337,8 +325,10 @@ static int G_NextWeapon(int direction)
 
     // The current weapon must be present in weapon_order_table
     // otherwise something has gone terribly wrong
-    if (i >= arrlen(weapon_order_table)) {
-        I_Error("Internal error: weapon %d not present in weapon_order_table", weapon);
+    if (i >= arrlen(weapon_order_table))
+    {
+        I_Error("Internal error: weapon %d not present in weapon_order_table",
+                weapon);
     }
 
     // Switch weapon. Don't loop forever.
@@ -354,7 +344,7 @@ static int G_NextWeapon(int direction)
 
 // [crispy] holding down the "Run" key may trigger special behavior,
 // e.g. quick exit, clean screenshots, resurrection from savegames
-boolean speedkeydown (void)
+boolean speedkeydown(void)
 {
     return (key_speed < NUMKEYS && gamekeydown[key_speed]) ||
            (joybspeed < MAX_JOY_BUTTONS && joybuttons[joybspeed]) ||
@@ -432,19 +422,19 @@ static double CalcMouseVert(int mousey)
 // or reads it from the demo buffer.
 // If recording a demo, write it out
 //
-void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
+void G_BuildTiccmd(ticcmd_t *cmd, int maketic)
 {
-    int		i;
-    boolean	strafe;
-    boolean	bstrafe;
-    int		speed;
-    int		tspeed;
-    int		lspeed;
-    int		angle = 0; // [crispy]
-    short	mousex_angleturn; // [crispy]
-    int		forward;
-    int		side;
-    int		look;
+    int i;
+    boolean strafe;
+    boolean bstrafe;
+    int speed;
+    int tspeed;
+    int lspeed;
+    int angle = 0;          // [crispy]
+    short mousex_angleturn; // [crispy]
+    int forward;
+    int side;
+    int look;
     player_t *const player = &players[consoleplayer];
     static char playermessage[48];
 
@@ -453,39 +443,34 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     memcpy(cmd, &basecmd, sizeof(*cmd));
     memset(&basecmd, 0, sizeof(ticcmd_t));
 
-    cmd->consistancy =
-	consistancy[consoleplayer][maketic%BACKUPTICS];
+    cmd->consistancy = consistancy[consoleplayer][maketic % BACKUPTICS];
 
-    strafe = gamekeydown[key_strafe] || mousebuttons[mousebstrafe]
-	|| joybuttons[joybstrafe];
+    strafe = gamekeydown[key_strafe] || mousebuttons[mousebstrafe] ||
+             joybuttons[joybstrafe];
 
     // fraggle: support the old "joyb_speed = 31" hack which
     // allowed an autorun effect
 
     // [crispy] when "always run" is active,
     // pressing the "run" key will result in walking
-    speed = (key_speed >= NUMKEYS
-         || joybspeed >= MAX_JOY_BUTTONS);
+    speed = (key_speed >= NUMKEYS || joybspeed >= MAX_JOY_BUTTONS);
     speed ^= speedkeydown();
 
     forward = side = look = 0;
 
     // use two stage accelerative turning
     // on the keyboard and joystick
-    if (joyxmove < 0
-	|| joyxmove > 0
-	|| gamekeydown[key_right]
-	|| gamekeydown[key_left]
-	|| mousebuttons[mousebturnright]
-	|| mousebuttons[mousebturnleft])
-	turnheld += ticdup;
+    if (joyxmove < 0 || joyxmove > 0 || gamekeydown[key_right] ||
+        gamekeydown[key_left] || mousebuttons[mousebturnright] ||
+        mousebuttons[mousebturnleft])
+        turnheld += ticdup;
     else
-	turnheld = 0;
+        turnheld = 0;
 
     if (turnheld < SLOWTURNTICS)
-	tspeed = 2;             // slow turn
+        tspeed = 2; // slow turn
     else
-	tspeed = speed;
+        tspeed = speed;
 
     // [crispy] use two stage accelerative looking
     if (gamekeydown[key_lookdown] || gamekeydown[key_lookup])
@@ -529,10 +514,11 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         }
 
         M_snprintf(playermessage, sizeof(playermessage), "ALWAYS RUN %s%s",
-            crstr[CR_GREEN],
-            (joybspeed >= MAX_JOY_BUTTONS) ? "ON" : "OFF");
+                   crstr[CR_GREEN],
+                   (joybspeed >= MAX_JOY_BUTTONS) ? "ON" : "OFF");
         player->message = playermessage;
-        S_StartSoundOptional(NULL, sfx_mnusli, sfx_swtchn); // [NS] Optional menu sounds.
+        S_StartSoundOptional(NULL, sfx_mnusli,
+                             sfx_swtchn); // [NS] Optional menu sounds.
 
         gamekeydown[key_toggleautorun] = false;
     }
@@ -543,11 +529,11 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         novert = !novert;
 
         M_snprintf(playermessage, sizeof(playermessage),
-            "vertical mouse movement %s%s",
-            crstr[CR_GREEN],
-            !novert ? "ON" : "OFF");
+                   "vertical mouse movement %s%s", crstr[CR_GREEN],
+                   !novert ? "ON" : "OFF");
         player->message = playermessage;
-        S_StartSoundOptional(NULL, sfx_mnusli, sfx_swtchn); // [NS] Optional menu sounds.
+        S_StartSoundOptional(NULL, sfx_mnusli,
+                             sfx_swtchn); // [NS] Optional menu sounds.
 
         gamekeydown[key_togglenovert] = false;
     }
@@ -555,11 +541,9 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     // [crispy] extra high precision IDMYPOS variant, updates for 10 seconds
     if (player->powers[pw_mapcoords])
     {
-        M_snprintf(playermessage, sizeof(playermessage),
-            "X=%.10f Y=%.10f A=%d",
-            (double)player->mo->x/FRACUNIT,
-            (double)player->mo->y/FRACUNIT,
-            player->mo->angle >> 24);
+        M_snprintf(playermessage, sizeof(playermessage), "X=%.10f Y=%.10f A=%d",
+                   (double) player->mo->x / FRACUNIT,
+                   (double) player->mo->y / FRACUNIT, player->mo->angle >> 24);
         player->message = playermessage;
 
         player->powers[pw_mapcoords]--;
@@ -603,10 +587,10 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     }
     else
     {
-	if (gamekeydown[key_right] || mousebuttons[mousebturnright])
-	    angle -= angleturn[tspeed];
-	if (gamekeydown[key_left] || mousebuttons[mousebturnleft])
-	    angle += angleturn[tspeed];
+        if (gamekeydown[key_right] || mousebuttons[mousebturnright])
+            angle -= angleturn[tspeed];
+        if (gamekeydown[key_left] || mousebuttons[mousebturnleft])
+            angle += angleturn[tspeed];
         if (use_analog && joyxmove)
         {
             // Cubic response curve allows for finer control when stick
@@ -624,15 +608,17 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         }
     }
 
-    if (gamekeydown[key_up] || gamekeydown[key_alt_up]) // [crispy] add key_alt_*
+    if (gamekeydown[key_up] ||
+        gamekeydown[key_alt_up]) // [crispy] add key_alt_*
     {
-	// fprintf(stderr, "up\n");
-	forward += forwardmove[speed];
+        // fprintf(stderr, "up\n");
+        forward += forwardmove[speed];
     }
-    if (gamekeydown[key_down] || gamekeydown[key_alt_down]) // [crispy] add key_alt_*
+    if (gamekeydown[key_down] ||
+        gamekeydown[key_alt_down]) // [crispy] add key_alt_*
     {
-	// fprintf(stderr, "down\n");
-	forward -= forwardmove[speed];
+        // fprintf(stderr, "down\n");
+        forward -= forwardmove[speed];
     }
 
     if (use_analog && joyymove)
@@ -649,16 +635,16 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
             forward -= forwardmove[speed];
     }
 
-    if (gamekeydown[key_strafeleft] || gamekeydown[key_alt_strafeleft] // [crispy] add key_alt_*
-     || joybuttons[joybstrafeleft]
-     || mousebuttons[mousebstrafeleft])
+    if (gamekeydown[key_strafeleft] ||
+        gamekeydown[key_alt_strafeleft] // [crispy] add key_alt_*
+        || joybuttons[joybstrafeleft] || mousebuttons[mousebstrafeleft])
     {
         side -= sidemove[speed];
     }
 
-    if (gamekeydown[key_straferight] || gamekeydown[key_alt_straferight] // [crispy] add key_alt_*
-     || joybuttons[joybstraferight]
-     || mousebuttons[mousebstraferight])
+    if (gamekeydown[key_straferight] ||
+        gamekeydown[key_alt_straferight] // [crispy] add key_alt_*
+        || joybuttons[joybstraferight] || mousebuttons[mousebstraferight])
     {
         side += sidemove[speed];
     }
@@ -687,14 +673,12 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
             look = lspeed;
             kbdlookctrl += ticdup;
         }
-        else
-        if (gamekeydown[key_lookdown])
+        else if (gamekeydown[key_lookdown])
         {
             look = -lspeed;
             kbdlookctrl += ticdup;
         }
-        else
-        if (joylook && joystick_look_sensitivity)
+        else if (joylook && joystick_look_sensitivity)
         {
             if (use_analog)
             {
@@ -717,19 +701,20 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
             kbdlookctrl += ticdup;
         }
         else
-        // [crispy] keyboard lookspring
-        if (gamekeydown[key_lookcenter] || (crispy->freelook == FREELOOK_SPRING && kbdlookctrl))
-        {
-            look = TOCENTER;
-            kbdlookctrl = 0;
-        }
+            // [crispy] keyboard lookspring
+            if (gamekeydown[key_lookcenter] ||
+                (crispy->freelook == FREELOOK_SPRING && kbdlookctrl))
+            {
+                look = TOCENTER;
+                kbdlookctrl = 0;
+            }
     }
 
     // [crispy] jump keys
     if (critical->jump)
     {
-        if (gamekeydown[key_jump] || mousebuttons[mousebjump]
-            || joybuttons[joybjump])
+        if (gamekeydown[key_jump] || mousebuttons[mousebjump] ||
+            joybuttons[joybjump])
         {
             cmd->arti |= AFLAG_JUMP;
         }
@@ -738,17 +723,15 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     // buttons
     cmd->chatchar = HU_dequeueChatChar();
 
-    if (gamekeydown[key_fire] || mousebuttons[mousebfire]
-	|| joybuttons[joybfire])
-	cmd->buttons |= BT_ATTACK;
+    if (gamekeydown[key_fire] || mousebuttons[mousebfire] ||
+        joybuttons[joybfire])
+        cmd->buttons |= BT_ATTACK;
 
-    if (gamekeydown[key_use]
-     || joybuttons[joybuse]
-     || mousebuttons[mousebuse])
+    if (gamekeydown[key_use] || joybuttons[joybuse] || mousebuttons[mousebuse])
     {
-	cmd->buttons |= BT_USE;
-	// clear double clicks if hit use button
-	dclicks = 0;
+        cmd->buttons |= BT_USE;
+        // clear double clicks if hit use button
+        dclicks = 0;
     }
 
     // If the previous or next weapon button is pressed, the
@@ -765,14 +748,14 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     {
         // Check weapon keys.
 
-        for (i=0; i<arrlen(weapon_keys); ++i)
+        for (i = 0; i < arrlen(weapon_keys); ++i)
         {
             int key = *weapon_keys[i];
 
             if (gamekeydown[key])
             {
                 cmd->buttons |= BT_CHANGE;
-                cmd->buttons |= i<<BT_WEAPONSHIFT;
+                cmd->buttons |= i << BT_WEAPONSHIFT;
                 break;
             }
         }
@@ -783,7 +766,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     // mouse
     if (mousebuttons[mousebforward])
     {
-	forward += forwardmove[speed];
+        forward += forwardmove[speed];
     }
     if (mousebuttons[mousebbackward])
     {
@@ -793,7 +776,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     if (dclick_use)
     {
         // forward double click
-        if (mousebuttons[mousebforward] != dclickstate && dclicktime > 1 )
+        if (mousebuttons[mousebforward] != dclickstate && dclicktime > 1)
         {
             dclickstate = mousebuttons[mousebforward];
             if (dclickstate)
@@ -817,10 +800,8 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         }
 
         // strafe double click
-        bstrafe =
-            mousebuttons[mousebstrafe]
-            || joybuttons[joybstrafe];
-        if (bstrafe != dclickstate2 && dclicktime2 > 1 )
+        bstrafe = mousebuttons[mousebstrafe] || joybuttons[joybstrafe];
+        if (bstrafe != dclickstate2 && dclicktime2 > 1)
         {
             dclickstate2 = bstrafe;
             if (dclickstate2)
@@ -846,15 +827,14 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 
     // [crispy] mouse look
     if ((crispy->freelook && mousebuttons[mousebmouselook]) ||
-         crispy->mouselook)
+        crispy->mouselook)
     {
         const double vert = CalcMouseVert(mousey);
         cmd->lookdir += mouse_y_invert ? CarryPitch(-vert) : CarryPitch(vert);
     }
-    else
-    if (!novert)
+    else if (!novert)
     {
-    forward += CarryMouseVert(CalcMouseVert(mousey));
+        forward += CarryMouseVert(CalcMouseVert(mousey));
     }
 
     // [crispy] single click on mouse look button centers view
@@ -868,19 +848,20 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
             mbmlookctrl += ticdup;
         }
         else
-        // [crispy] released
-        if (mbmlookctrl)
-        {
-            if (crispy->freelook == FREELOOK_SPRING || mbmlookctrl < SLOWTURNTICS) // [crispy] short click
+            // [crispy] released
+            if (mbmlookctrl)
             {
-                look = TOCENTER;
+                if (crispy->freelook == FREELOOK_SPRING ||
+                    mbmlookctrl < SLOWTURNTICS) // [crispy] short click
+                {
+                    look = TOCENTER;
+                }
+                mbmlookctrl = 0;
             }
-            mbmlookctrl = 0;
-        }
     }
 
     if (strafe && !cmd->angleturn)
-	side += CarryMouseSide(CalcMouseSide(mousex));
+        side += CarryMouseSide(CalcMouseSide(mousex));
 
     mousex_angleturn = cmd->angleturn;
 
@@ -894,21 +875,21 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     if (angle)
     {
         cmd->angleturn = CarryAngle(cmd->angleturn + angle);
-        localview.ticangleturn = crispy->fliplevels ?
-            (mousex_angleturn - cmd->angleturn) :
-            (cmd->angleturn - mousex_angleturn);
+        localview.ticangleturn = crispy->fliplevels
+                                     ? (mousex_angleturn - cmd->angleturn)
+                                     : (cmd->angleturn - mousex_angleturn);
     }
 
     mousex = mousey = 0;
 
     if (forward > MAXPLMOVE)
-	forward = MAXPLMOVE;
+        forward = MAXPLMOVE;
     else if (forward < -MAXPLMOVE)
-	forward = -MAXPLMOVE;
+        forward = -MAXPLMOVE;
     if (side > MAXPLMOVE)
-	side = MAXPLMOVE;
+        side = MAXPLMOVE;
     else if (side < -MAXPLMOVE)
-	side = -MAXPLMOVE;
+        side = -MAXPLMOVE;
 
     cmd->forwardmove += forward;
     cmd->sidemove += side;
@@ -932,25 +913,27 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     // [crispy] suppress pause when a new game is started
     if (sendpause && gameaction != ga_newgame)
     {
-	sendpause = false;
-	// [crispy] ignore un-pausing in menus during demo recording
-	if (!(menuactive && demorecording && paused) && gameaction != ga_loadgame)
-	{
-	cmd->buttons = BT_SPECIAL | BTS_PAUSE;
-	}
+        sendpause = false;
+        // [crispy] ignore un-pausing in menus during demo recording
+        if (!(menuactive && demorecording && paused) &&
+            gameaction != ga_loadgame)
+        {
+            cmd->buttons = BT_SPECIAL | BTS_PAUSE;
+        }
     }
 
     if (sendsave)
     {
-	sendsave = false;
-	cmd->buttons = BT_SPECIAL | BTS_SAVEGAME | (savegameslot<<BTS_SAVESHIFT);
+        sendsave = false;
+        cmd->buttons =
+            BT_SPECIAL | BTS_SAVEGAME | (savegameslot << BTS_SAVESHIFT);
     }
 
     if (crispy->fliplevels)
     {
-	mousex_angleturn = -mousex_angleturn;
-	cmd->angleturn = -cmd->angleturn;
-	cmd->sidemove = -cmd->sidemove;
+        mousex_angleturn = -mousex_angleturn;
+        cmd->angleturn = -cmd->angleturn;
+        cmd->sidemove = -cmd->sidemove;
     }
 
     // low-res turning
@@ -974,9 +957,9 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         // Carry forward the error from the reduced resolution to the
         // next tic, so that successive small movements can accumulate.
 
-        prevcarry.angle += crispy->fliplevels ?
-                            cmd->angleturn - desired_angleturn :
-                            desired_angleturn - cmd->angleturn;
+        prevcarry.angle += crispy->fliplevels
+                               ? cmd->angleturn - desired_angleturn
+                               : desired_angleturn - cmd->angleturn;
     }
 }
 
@@ -984,9 +967,9 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 //
 // G_DoLoadLevel
 //
-void G_DoLoadLevel (void)
+void G_DoLoadLevel(void)
 {
-    int             i;
+    int i;
 
     // [crispy] NRFTL / The Master Levels
     if (crispy->havenerve || crispy->havemaster)
@@ -995,8 +978,7 @@ void G_DoLoadLevel (void)
         {
             gamemission = pack_master;
         }
-        else
-        if (crispy->havenerve && gameepisode == 2)
+        else if (crispy->havenerve && gameepisode == 2)
         {
             gamemission = pack_nerve;
         }
@@ -1011,8 +993,7 @@ void G_DoLoadLevel (void)
         {
             gameepisode = 3;
         }
-        else
-        if (gamemission == pack_nerve)
+        else if (gamemission == pack_nerve)
         {
             gameepisode = 2;
         }
@@ -1029,8 +1010,8 @@ void G_DoLoadLevel (void)
     // The "Sky never changes in Doom II" bug was fixed in
     // the id Anthology version of doom2.exe for Final Doom.
     // [crispy] correct "Sky never changes in Doom II" bug
-    if ((gamemode == commercial)
-     && (gameversion == exe_final2 || gameversion == exe_chex || true))
+    if ((gamemode == commercial) &&
+        (gameversion == exe_final2 || gameversion == exe_chex || true))
     {
         const char *skytexturename;
 
@@ -1043,18 +1024,17 @@ void G_DoLoadLevel (void)
                 skytexturename = "SKY1";
         }
         // masterlevel skies
-        else if (gamemap < 21 && (gameepisode == 3 || gamemission == pack_master))
+        else if (gamemap < 21 &&
+                 (gameepisode == 3 || gamemission == pack_master))
         {
             if (D_CheckMasterlevelKex())
             {
                 // masterlevels kex skies
                 if (gamemap == 10)
                     skytexturename = "SKY3";
-                else
-                if (gamemap <= 9)
+                else if (gamemap <= 9)
                     skytexturename = "SKYM1";
-                else
-                if (gamemap >= 16)
+                else if (gamemap >= 16)
                     skytexturename = "SKYM3";
                 else
                     skytexturename = "SKYM2";
@@ -1064,8 +1044,7 @@ void G_DoLoadLevel (void)
                 // masterlevels psn/unity skies
                 if (gamemap < 12 || gamemap == 14 || gamemap == 15)
                     skytexturename = "SKY1";
-                else
-                if (gamemap >= 19)
+                else if (gamemap >= 19)
                     skytexturename = "SKY3";
                 else
                     skytexturename = "SKY2";
@@ -1076,8 +1055,7 @@ void G_DoLoadLevel (void)
         {
             if (gamemap < 12)
                 skytexturename = "SKY1";
-            else
-            if (gamemap < 21)
+            else if (gamemap < 21)
                 skytexturename = "SKY2";
             else
                 skytexturename = "SKY3";
@@ -1090,19 +1068,19 @@ void G_DoLoadLevel (void)
     // [crispy] sky texture scales
     R_InitSkyMap();
 
-    levelstarttic = gametic;        // for time calculation
+    levelstarttic = gametic; // for time calculation
 
     if (wipegamestate == GS_LEVEL)
-	wipegamestate = -1;             // force a wipe
+        wipegamestate = -1; // force a wipe
 
     gamestate = GS_LEVEL;
 
-    for (i=0 ; i<MAXPLAYERS ; i++)
+    for (i = 0; i < MAXPLAYERS; i++)
     {
-	turbodetected[i] = false;
-	if (playeringame[i] && players[i].playerstate == PST_DEAD)
-	    players[i].playerstate = PST_REBORN;
-	memset (players[i].frags,0,sizeof(players[i].frags));
+        turbodetected[i] = false;
+        if (playeringame[i] && players[i].playerstate == PST_DEAD)
+            players[i].playerstate = PST_REBORN;
+        memset(players[i].frags, 0, sizeof(players[i].frags));
     }
 
     // [crispy] update the "singleplayer" variable
@@ -1114,7 +1092,8 @@ void G_DoLoadLevel (void)
         const char message[] = "The -doubleammo option is not supported"
                                " for demos and\n"
                                " network play.";
-        if (!demo_p) demorecording = false;
+        if (!demo_p)
+            demorecording = false;
         I_Error(message);
     }
 
@@ -1135,25 +1114,26 @@ void G_DoLoadLevel (void)
             const char message[] = "The -pistolstart option is not supported"
                                    " for demos and\n"
                                    " network play.";
-            if (!demo_p) demorecording = false;
+            if (!demo_p)
+                demorecording = false;
             I_Error(message);
         }
     }
 
-    P_SetupLevel (gameepisode, gamemap, 0, gameskill);
-    displayplayer = consoleplayer;		// view the guy you are playing
+    P_SetupLevel(gameepisode, gamemap, 0, gameskill);
+    displayplayer = consoleplayer; // view the guy you are playing
     gameaction = ga_nothing;
-    Z_CheckHeap ();
+    Z_CheckHeap();
 
     // clear cmd building stuff
 
-    memset (gamekeydown, 0, sizeof(gamekeydown));
+    memset(gamekeydown, 0, sizeof(gamekeydown));
     joyxmove = joyymove = joystrafemove = joylook = 0;
     mousex = mousey = 0;
     memset(&localview, 0, sizeof(localview)); // [crispy]
-    memset(&carry, 0, sizeof(carry)); // [crispy]
+    memset(&carry, 0, sizeof(carry));         // [crispy]
     memset(&prevcarry, 0, sizeof(prevcarry)); // [crispy]
-    memset(&basecmd, 0, sizeof(basecmd)); // [crispy]
+    memset(&basecmd, 0, sizeof(basecmd));     // [crispy]
     sendpause = sendsave = paused = false;
     memset(mousearray, 0, sizeof(mousearray));
     memset(joyarray, 0, sizeof(joyarray));
@@ -1174,7 +1154,7 @@ static void SetJoyButtons(unsigned int buttons_mask)
 {
     int i;
 
-    for (i=0; i<MAX_JOY_BUTTONS; ++i)
+    for (i = 0; i < MAX_JOY_BUTTONS; ++i)
     {
         int button_on = (buttons_mask & (1 << i)) != 0;
 
@@ -1202,7 +1182,7 @@ static void SetMouseButtons(unsigned int buttons_mask)
 {
     int i;
 
-    for (i=0; i<MAX_MOUSE_BUTTONS; ++i)
+    for (i = 0; i < MAX_MOUSE_BUTTONS; ++i)
     {
         unsigned int button_on = (buttons_mask & (1 << i)) != 0;
 
@@ -1220,7 +1200,7 @@ static void SetMouseButtons(unsigned int buttons_mask)
             }
         }
 
-	mousebuttons[i] = button_on;
+        mousebuttons[i] = button_on;
     }
 }
 
@@ -1228,7 +1208,7 @@ static void SetMouseButtons(unsigned int buttons_mask)
 // G_Responder
 // Get info needed to make ticcmd_ts for the players.
 //
-boolean G_Responder (event_t* ev)
+boolean G_Responder(event_t *ev)
 {
     // [crispy] demo pause (from prboom-plus)
     if (gameaction == ga_nothing &&
@@ -1253,43 +1233,43 @@ boolean G_Responder (event_t* ev)
     }
 
     // allow spy mode changes even during the demo
-    if (gamestate == GS_LEVEL && ev->type == ev_keydown
-     && ev->data1 == key_spy && (singledemo || !deathmatch) )
+    if (gamestate == GS_LEVEL && ev->type == ev_keydown &&
+        ev->data1 == key_spy && (singledemo || !deathmatch))
     {
-	// spy mode
-	do
-	{
-	    displayplayer++;
-	    if (displayplayer == MAXPLAYERS)
-		displayplayer = 0;
-	} while (!playeringame[displayplayer] && displayplayer != consoleplayer);
-	// [crispy] killough 3/7/98: switch status bar views too
-	ST_Start();
-	HU_Start();
-	S_UpdateSounds(players[displayplayer].mo);
-	// [crispy] re-init automap variables for correct player arrow angle
-	if (automapactive)
-	AM_initVariables();
-	return true;
+        // spy mode
+        do
+        {
+            displayplayer++;
+            if (displayplayer == MAXPLAYERS)
+                displayplayer = 0;
+        } while (!playeringame[displayplayer] &&
+                 displayplayer != consoleplayer);
+        // [crispy] killough 3/7/98: switch status bar views too
+        ST_Start();
+        HU_Start();
+        S_UpdateSounds(players[displayplayer].mo);
+        // [crispy] re-init automap variables for correct player arrow angle
+        if (automapactive)
+            AM_initVariables();
+        return true;
     }
 
     // any other key pops up menu if in demos
     if (gameaction == ga_nothing && !singledemo &&
-	(demoplayback || gamestate == GS_DEMOSCREEN)
-	)
+        (demoplayback || gamestate == GS_DEMOSCREEN))
     {
-	if (ev->type == ev_keydown ||
-	    (ev->type == ev_mouse && ev->data1) ||
-	    (ev->type == ev_joystick && ev->data1) )
-	{
-	    // [crispy] play a sound if the menu is activated with a different key than ESC
-	    if (!menuactive && crispy->soundfix)
-		S_StartSoundOptional(NULL, sfx_mnuopn, sfx_swtchn); // [NS] Optional menu sounds.
-	    M_StartControlPanel ();
-	    joywait = I_GetTime() + 5;
-	    return true;
-	}
-	return false;
+        if (ev->type == ev_keydown || (ev->type == ev_mouse && ev->data1) ||
+            (ev->type == ev_joystick && ev->data1))
+        {
+            // [crispy] play a sound if the menu is activated with a different key than ESC
+            if (!menuactive && crispy->soundfix)
+                S_StartSoundOptional(NULL, sfx_mnuopn,
+                                     sfx_swtchn); // [NS] Optional menu sounds.
+            M_StartControlPanel();
+            joywait = I_GetTime() + 5;
+            return true;
+        }
+        return false;
     }
 
     if (gamestate == GS_LEVEL)
@@ -1301,18 +1281,18 @@ boolean G_Responder (event_t* ev)
 	    return true;
 	}
 #endif
-	if (HU_Responder (ev))
-	    return true;	// chat ate the event
-	if (ST_Responder (ev))
-	    return true;	// status window ate it
-	if (AM_Responder (ev))
-	    return true;	// automap ate it
+        if (HU_Responder(ev))
+            return true; // chat ate the event
+        if (ST_Responder(ev))
+            return true; // status window ate it
+        if (AM_Responder(ev))
+            return true; // automap ate it
     }
 
     if (gamestate == GS_FINALE)
     {
-	if (F_Responder (ev))
-	    return true;	// finale ate the event
+        if (F_Responder(ev))
+            return true; // finale ate the event
     }
 
     if (testcontrols && ev->type == ev_mouse)
@@ -1339,46 +1319,46 @@ boolean G_Responder (event_t* ev)
 
     switch (ev->type)
     {
-      case ev_keydown:
-	if (ev->data1 == key_pause)
-	{
-	    sendpause = true;
-	}
-        else if (ev->data1 <NUMKEYS)
-        {
-	    gamekeydown[ev->data1] = true;
-        }
+        case ev_keydown:
+            if (ev->data1 == key_pause)
+            {
+                sendpause = true;
+            }
+            else if (ev->data1 < NUMKEYS)
+            {
+                gamekeydown[ev->data1] = true;
+            }
 
-	return true;    // eat key down events
+            return true; // eat key down events
 
-      case ev_keyup:
-	if (ev->data1 <NUMKEYS)
-	    gamekeydown[ev->data1] = false;
-	return false;   // always let key up events filter down
+        case ev_keyup:
+            if (ev->data1 < NUMKEYS)
+                gamekeydown[ev->data1] = false;
+            return false; // always let key up events filter down
 
-      case ev_mouse:
-        SetMouseButtons(ev->data1);
-        mousex += ev->data2;
-        mousey += ev->data3;
-	return true;    // eat events
+        case ev_mouse:
+            SetMouseButtons(ev->data1);
+            mousex += ev->data2;
+            mousey += ev->data3;
+            return true; // eat events
 
-      case ev_joystick:
-        SetJoyButtons(ev->data1);
-	joyxmove = ev->data2;
-	joyymove = ev->data3;
-        joystrafemove = ev->data4;
-        joylook = ev->data5;
-	return true;    // eat events
+        case ev_joystick:
+            SetJoyButtons(ev->data1);
+            joyxmove = ev->data2;
+            joyymove = ev->data3;
+            joystrafemove = ev->data4;
+            joylook = ev->data5;
+            return true; // eat events
 
-      default:
-	break;
+        default:
+            break;
     }
 
     return false;
 }
 
 // [crispy] For fast polling.
-void G_FastResponder (void)
+void G_FastResponder(void)
 {
     if (newfastmouse)
     {
@@ -1390,111 +1370,112 @@ void G_FastResponder (void)
 }
 
 // [crispy]
-void G_PrepTiccmd (void)
+void G_PrepTiccmd(void)
 {
     const boolean strafe = gamekeydown[key_strafe] ||
-        mousebuttons[mousebstrafe] || joybuttons[joybstrafe];
+                           mousebuttons[mousebstrafe] || joybuttons[joybstrafe];
 
     if (mousex && !strafe)
     {
         localview.rawangle -= CalcMouseAngle(mousex);
         basecmd.angleturn = CarryAngle(localview.rawangle);
-        localview.angle = crispy->fliplevels ?
-            -(basecmd.angleturn << 16) : (basecmd.angleturn << 16);
+        localview.angle = crispy->fliplevels ? -(basecmd.angleturn << 16)
+                                             : (basecmd.angleturn << 16);
         mousex = 0;
     }
 
     if (mousey && crispy->mouselook)
     {
         const double vert = CalcMouseVert(mousey);
-        basecmd.lookdir += mouse_y_invert ?
-                            CarryPitch(-vert): CarryPitch(vert);
+        basecmd.lookdir +=
+            mouse_y_invert ? CarryPitch(-vert) : CarryPitch(vert);
         mousey = 0;
     }
 }
 
 // [crispy] re-read game parameters from command line
-static void G_ReadGameParms (void)
+static void G_ReadGameParms(void)
 {
-    respawnparm = M_CheckParm ("-respawn");
-    fastparm = M_CheckParm ("-fast");
-    nomonsters = M_CheckParm ("-nomonsters");
+    respawnparm = M_CheckParm("-respawn");
+    fastparm = M_CheckParm("-fast");
+    nomonsters = M_CheckParm("-nomonsters");
 }
 
 // [crispy] take a screenshot after rendering the next frame
 static void G_CrispyScreenShot()
 {
-	// [crispy] increase screenshot filename limit
-	V_ScreenShot("DOOM%04i.%s");
-	players[consoleplayer].message = DEH_String("screen shot");
-	crispy->cleanscreenshot = 0;
-	crispy->screenshotmsg = 2;
+    // [crispy] increase screenshot filename limit
+    V_ScreenShot("DOOM%04i.%s");
+    players[consoleplayer].message = DEH_String("screen shot");
+    crispy->cleanscreenshot = 0;
+    crispy->screenshotmsg = 2;
 }
 
 //
 // G_Ticker
 // Make ticcmd_ts for the players.
 //
-void G_Ticker (void)
+void G_Ticker(void)
 {
-    int		i;
-    int		buf;
-    ticcmd_t*	cmd;
+    int i;
+    int buf;
+    ticcmd_t *cmd;
 
     // do player reborns if needed
-    for (i=0 ; i<MAXPLAYERS ; i++)
-	if (playeringame[i] && players[i].playerstate == PST_REBORN)
-	    G_DoReborn (i);
+    for (i = 0; i < MAXPLAYERS; i++)
+        if (playeringame[i] && players[i].playerstate == PST_REBORN)
+            G_DoReborn(i);
 
     // do things to change the game state
     while (gameaction != ga_nothing)
     {
-	switch (gameaction)
-	{
-	  case ga_loadlevel:
-	    G_DoLoadLevel ();
-	    break;
-	  case ga_newgame:
-	    // [crispy] re-read game parameters from command line
-	    G_ReadGameParms();
-	    G_DoNewGame ();
-	    break;
-	  case ga_loadgame:
-	    // [crispy] re-read game parameters from command line
-	    G_ReadGameParms();
-	    G_DoLoadGame ();
-	    break;
-	  case ga_savegame:
-	    G_DoSaveGame ();
-	    break;
-	  case ga_playdemo:
-	    G_DoPlayDemo ();
-	    break;
-	  case ga_completed:
-	    G_DoCompleted ();
-	    break;
-	  case ga_victory:
-	    F_StartFinale ();
-	    break;
-	  case ga_worlddone:
-	    G_DoWorldDone ();
-	    break;
-	  case ga_screenshot:
-	    // [crispy] redraw view without weapons and HUD
-	    if (gamestate == GS_LEVEL && (crispy->cleanscreenshot || crispy->screenshotmsg == 1))
-	    {
-		crispy->screenshotmsg = 4;
-		crispy->post_rendering_hook = G_CrispyScreenShot;
-	    }
-	    else
-	    {
-		G_CrispyScreenShot();
-	    }
-	    gameaction = ga_nothing;
-	    break;
-	  case ga_nothing:
-	    break;
-	}
+        switch (gameaction)
+        {
+            case ga_loadlevel:
+                G_DoLoadLevel();
+                break;
+            case ga_newgame:
+                // [crispy] re-read game parameters from command line
+                G_ReadGameParms();
+                G_DoNewGame();
+                break;
+            case ga_loadgame:
+                // [crispy] re-read game parameters from command line
+                G_ReadGameParms();
+                G_DoLoadGame();
+                break;
+            case ga_savegame:
+                G_DoSaveGame();
+                break;
+            case ga_playdemo:
+                G_DoPlayDemo();
+                break;
+            case ga_completed:
+                G_DoCompleted();
+                break;
+            case ga_victory:
+                F_StartFinale();
+                break;
+            case ga_worlddone:
+                G_DoWorldDone();
+                break;
+            case ga_screenshot:
+                // [crispy] redraw view without weapons and HUD
+                if (gamestate == GS_LEVEL &&
+                    (crispy->cleanscreenshot || crispy->screenshotmsg == 1))
+                {
+                    crispy->screenshotmsg = 4;
+                    crispy->post_rendering_hook = G_CrispyScreenShot;
+                }
+                else
+                {
+                    G_CrispyScreenShot();
+                }
+                gameaction = ga_nothing;
+                break;
+            case ga_nothing:
+                break;
+        }
     }
 
     // [crispy] demo sync of revenant tracers and RNG (from prboom-plus)
@@ -1504,111 +1485,111 @@ void G_Ticker (void)
     }
     else
     {
-    // get commands, check consistancy,
-    // and build new consistancy check
-    buf = (gametic/ticdup)%BACKUPTICS;
+        // get commands, check consistancy,
+        // and build new consistancy check
+        buf = (gametic / ticdup) % BACKUPTICS;
 
-    for (i=0 ; i<MAXPLAYERS ; i++)
-    {
-	if (playeringame[i])
-	{
-	    cmd = &players[i].cmd;
-
-	    memcpy(cmd, &netcmds[i], sizeof(ticcmd_t));
-
-	    if (demoplayback)
-		G_ReadDemoTiccmd (cmd);
-	    // [crispy] do not record tics while still playing back in demo continue mode
-	    if (demorecording && !demoplayback)
-		G_WriteDemoTiccmd (cmd);
-
-	    // check for turbo cheats
-
-            // check ~ 4 seconds whether to display the turbo message.
-            // store if the turbo threshold was exceeded in any tics
-            // over the past 4 seconds.  offset the checking period
-            // for each player so messages are not displayed at the
-            // same time.
-
-            if (cmd->forwardmove > TURBOTHRESHOLD)
+        for (i = 0; i < MAXPLAYERS; i++)
+        {
+            if (playeringame[i])
             {
-                turbodetected[i] = true;
-            }
+                cmd = &players[i].cmd;
 
-            if ((gametic & 31) == 0
-             && ((gametic >> 5) % MAXPLAYERS) == i
-             && turbodetected[i])
-            {
-                static char turbomessage[80];
-                M_snprintf(turbomessage, sizeof(turbomessage),
-                           "%s is turbo!", player_names[i]);
-                players[consoleplayer].message = turbomessage;
-                turbodetected[i] = false;
-            }
+                memcpy(cmd, &netcmds[i], sizeof(ticcmd_t));
 
-	    if (netgame && !netdemo && !(gametic%ticdup) )
-	    {
-		if (gametic > BACKUPTICS
-		    && consistancy[i][buf] != cmd->consistancy)
-		{
-		    I_Error ("consistency failure (%i should be %i)",
-			     cmd->consistancy, consistancy[i][buf]);
-		}
-		if (players[i].mo)
-		    consistancy[i][buf] = players[i].mo->x;
-		else
-		    consistancy[i][buf] = rndindex;
-	    }
-	}
-    }
+                if (demoplayback)
+                    G_ReadDemoTiccmd(cmd);
+                // [crispy] do not record tics while still playing back in demo continue mode
+                if (demorecording && !demoplayback)
+                    G_WriteDemoTiccmd(cmd);
 
-    // [crispy] increase demo tics counter
-    if (demoplayback || demorecording)
-    {
-	    defdemotics++;
-    }
+                // check for turbo cheats
 
-    // check for special buttons
-    for (i=0 ; i<MAXPLAYERS ; i++)
-    {
-	if (playeringame[i])
-	{
-	    if (players[i].cmd.buttons & BT_SPECIAL)
-	    {
-		switch (players[i].cmd.buttons & BT_SPECIALMASK)
-		{
-		  case BTS_PAUSE:
-		    paused ^= 1;
-		    if (paused)
-			S_PauseSound ();
-		    else
-		    // [crispy] Fixed bug when music was hearable with zero volume
-		    if (musicVolume)
-			S_ResumeSound ();
-		    break;
+                // check ~ 4 seconds whether to display the turbo message.
+                // store if the turbo threshold was exceeded in any tics
+                // over the past 4 seconds.  offset the checking period
+                // for each player so messages are not displayed at the
+                // same time.
 
-		  case BTS_SAVEGAME:
-		    // [crispy] never override savegames by demo playback
-		    if (demoplayback)
-			break;
-		    if (!savedescription[0])
+                if (cmd->forwardmove > TURBOTHRESHOLD)
+                {
+                    turbodetected[i] = true;
+                }
+
+                if ((gametic & 31) == 0 && ((gametic >> 5) % MAXPLAYERS) == i &&
+                    turbodetected[i])
+                {
+                    static char turbomessage[80];
+                    M_snprintf(turbomessage, sizeof(turbomessage),
+                               "%s is turbo!", player_names[i]);
+                    players[consoleplayer].message = turbomessage;
+                    turbodetected[i] = false;
+                }
+
+                if (netgame && !netdemo && !(gametic % ticdup))
+                {
+                    if (gametic > BACKUPTICS &&
+                        consistancy[i][buf] != cmd->consistancy)
                     {
-                        M_StringCopy(savedescription, "NET GAME",
-                                     sizeof(savedescription));
+                        I_Error("consistency failure (%i should be %i)",
+                                cmd->consistancy, consistancy[i][buf]);
                     }
+                    if (players[i].mo)
+                        consistancy[i][buf] = players[i].mo->x;
+                    else
+                        consistancy[i][buf] = rndindex;
+                }
+            }
+        }
 
-		    savegameslot =
-			(players[i].cmd.buttons & BTS_SAVEMASK)>>BTS_SAVESHIFT;
-		    gameaction = ga_savegame;
-		    // [crispy] un-pause immediately after saving
-		    // (impossible to send save and pause specials within the same tic)
-		    if (demorecording && paused)
-			sendpause = true;
-		    break;
-		}
-	    }
-	}
-    }
+        // [crispy] increase demo tics counter
+        if (demoplayback || demorecording)
+        {
+            defdemotics++;
+        }
+
+        // check for special buttons
+        for (i = 0; i < MAXPLAYERS; i++)
+        {
+            if (playeringame[i])
+            {
+                if (players[i].cmd.buttons & BT_SPECIAL)
+                {
+                    switch (players[i].cmd.buttons & BT_SPECIALMASK)
+                    {
+                        case BTS_PAUSE:
+                            paused ^= 1;
+                            if (paused)
+                                S_PauseSound();
+                            else
+                                // [crispy] Fixed bug when music was hearable with zero volume
+                                if (musicVolume)
+                                    S_ResumeSound();
+                            break;
+
+                        case BTS_SAVEGAME:
+                            // [crispy] never override savegames by demo playback
+                            if (demoplayback)
+                                break;
+                            if (!savedescription[0])
+                            {
+                                M_StringCopy(savedescription, "NET GAME",
+                                             sizeof(savedescription));
+                            }
+
+                            savegameslot =
+                                (players[i].cmd.buttons & BTS_SAVEMASK) >>
+                                BTS_SAVESHIFT;
+                            gameaction = ga_savegame;
+                            // [crispy] un-pause immediately after saving
+                            // (impossible to send save and pause specials within the same tic)
+                            if (demorecording && paused)
+                                sendpause = true;
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     // Have we just finished displaying an intermission screen?
@@ -1623,33 +1604,33 @@ void G_Ticker (void)
 
     // [crispy] no pause at intermission screen during demo playback
     // to avoid desyncs (from prboom-plus)
-    if ((paused & 2 || (!demoplayback && menuactive && !netgame))
-        && gamestate != GS_LEVEL)
+    if ((paused & 2 || (!demoplayback && menuactive && !netgame)) &&
+        gamestate != GS_LEVEL)
     {
-    return;
+        return;
     }
 
     // do main actions
     switch (gamestate)
     {
-      case GS_LEVEL:
-	P_Ticker ();
-	ST_Ticker ();
-	AM_Ticker ();
-	HU_Ticker ();
-	break;
+        case GS_LEVEL:
+            P_Ticker();
+            ST_Ticker();
+            AM_Ticker();
+            HU_Ticker();
+            break;
 
-      case GS_INTERMISSION:
-	WI_Ticker ();
-	break;
+        case GS_INTERMISSION:
+            WI_Ticker();
+            break;
 
-      case GS_FINALE:
-	F_Ticker ();
-	break;
+        case GS_FINALE:
+            F_Ticker();
+            break;
 
-      case GS_DEMOSCREEN:
-	D_PageTicker ();
-	break;
+        case GS_DEMOSCREEN:
+            D_PageTicker();
+            break;
     }
 }
 
@@ -1664,38 +1645,36 @@ void G_Ticker (void)
 // Called at the start.
 // Called by the game initialization functions.
 //
-void G_InitPlayer (int player)
+void G_InitPlayer(int player)
 {
     // clear everything else to defaults
-    G_PlayerReborn (player);
+    G_PlayerReborn(player);
 }
-
 
 
 //
 // G_PlayerFinishLevel
 // Can when a player completes a level.
 //
-void G_PlayerFinishLevel (int player)
+void G_PlayerFinishLevel(int player)
 {
-    player_t*	p;
+    player_t *p;
 
     p = &players[player];
 
-    memset (p->powers, 0, sizeof (p->powers));
-    memset (p->cards, 0, sizeof (p->cards));
-    memset (p->tryopen, 0, sizeof (p->tryopen)); // [crispy] blinking key or skull in the status bar
-    p->mo->flags &= ~MF_SHADOW;		// cancel invisibility
-    p->extralight = 0;			// cancel gun flashes
-    p->fixedcolormap = 0;		// cancel ir gogles
-    p->damagecount = 0;			// no palette changes
+    memset(p->powers, 0, sizeof(p->powers));
+    memset(p->cards, 0, sizeof(p->cards));
+    memset(
+        p->tryopen, 0,
+        sizeof(p->tryopen)); // [crispy] blinking key or skull in the status bar
+    p->mo->flags &= ~MF_SHADOW; // cancel invisibility
+    p->extralight = 0;          // cancel gun flashes
+    p->fixedcolormap = 0;       // cancel ir gogles
+    p->damagecount = 0;         // no palette changes
     p->bonuscount = 0;
     // [crispy] reset additional player properties
-    p->lookdir = p->oldlookdir =
-    p->centering =
-    p->jumpTics =
-    p->recoilpitch = p->oldrecoilpitch =
-    p->btuse = p->btuse_tics = 0;
+    p->lookdir = p->oldlookdir = p->centering = p->jumpTics = p->recoilpitch =
+        p->oldrecoilpitch = p->btuse = p->btuse_tics = 0;
 }
 
 
@@ -1704,31 +1683,31 @@ void G_PlayerFinishLevel (int player)
 // Called after a player dies
 // almost everything is cleared and initialized
 //
-void G_PlayerReborn (int player)
+void G_PlayerReborn(int player)
 {
-    player_t*	p;
-    int		i;
-    int		frags[MAXPLAYERS];
-    int		killcount;
-    int		itemcount;
-    int		secretcount;
+    player_t *p;
+    int i;
+    int frags[MAXPLAYERS];
+    int killcount;
+    int itemcount;
+    int secretcount;
 
-    memcpy (frags,players[player].frags,sizeof(frags));
+    memcpy(frags, players[player].frags, sizeof(frags));
     killcount = players[player].killcount;
     itemcount = players[player].itemcount;
     secretcount = players[player].secretcount;
 
     p = &players[player];
-    memset (p, 0, sizeof(*p));
+    memset(p, 0, sizeof(*p));
 
-    memcpy (players[player].frags, frags, sizeof(players[player].frags));
+    memcpy(players[player].frags, frags, sizeof(players[player].frags));
     players[player].killcount = killcount;
     players[player].itemcount = itemcount;
     players[player].secretcount = secretcount;
 
-    p->usedown = p->attackdown = true;	// don't do anything immediately
+    p->usedown = p->attackdown = true; // don't do anything immediately
     p->playerstate = PST_LIVE;
-    p->health = deh_initial_health;     // Use dehacked value
+    p->health = deh_initial_health; // Use dehacked value
     // [crispy] negative player health
     p->neghealth = p->health;
     p->readyweapon = p->pendingweapon = wp_pistol;
@@ -1736,9 +1715,8 @@ void G_PlayerReborn (int player)
     p->weaponowned[wp_pistol] = true;
     p->ammo[am_clip] = deh_initial_bullets;
 
-    for (i=0 ; i<NUMAMMO ; i++)
-	p->maxammo[i] = maxammo[i];
-
+    for (i = 0; i < NUMAMMO; i++)
+        p->maxammo[i] = maxammo[i];
 }
 
 //
@@ -1747,43 +1725,40 @@ void G_PlayerReborn (int player)
 // at the given mapthing_t spot
 // because something is occupying it
 //
-void P_SpawnPlayer (mapthing_t* mthing);
+void P_SpawnPlayer(mapthing_t *mthing);
 
-boolean
-G_CheckSpot
-( int		playernum,
-  mapthing_t*	mthing )
+boolean G_CheckSpot(int playernum, mapthing_t *mthing)
 {
-    fixed_t		x;
-    fixed_t		y;
-    subsector_t*	ss;
-    mobj_t*		mo;
-    int			i;
+    fixed_t x;
+    fixed_t y;
+    subsector_t *ss;
+    mobj_t *mo;
+    int i;
 
     if (!players[playernum].mo)
     {
-	// first spawn of level, before corpses
-	for (i=0 ; i<playernum ; i++)
-	    if (players[i].mo->x == mthing->x << FRACBITS
-		&& players[i].mo->y == mthing->y << FRACBITS)
-		return false;
-	return true;
+        // first spawn of level, before corpses
+        for (i = 0; i < playernum; i++)
+            if (players[i].mo->x == mthing->x << FRACBITS &&
+                players[i].mo->y == mthing->y << FRACBITS)
+                return false;
+        return true;
     }
 
     x = mthing->x << FRACBITS;
     y = mthing->y << FRACBITS;
 
-    if (!P_CheckPosition (players[playernum].mo, x, y) )
-	return false;
+    if (!P_CheckPosition(players[playernum].mo, x, y))
+        return false;
 
     // flush an old corpse if needed
     if (bodyqueslot >= BODYQUESIZE)
-	P_RemoveMobj (bodyque[bodyqueslot%BODYQUESIZE]);
-    bodyque[bodyqueslot%BODYQUESIZE] = players[playernum].mo;
+        P_RemoveMobj(bodyque[bodyqueslot % BODYQUESIZE]);
+    bodyque[bodyqueslot % BODYQUESIZE] = players[playernum].mo;
     bodyqueslot++;
 
     // spawn a teleport fog
-    ss = R_PointInSubsector (x,y);
+    ss = R_PointInSubsector(x, y);
 
 
     // The code in the released source looks like this:
@@ -1813,21 +1788,21 @@ G_CheckSpot
 
         switch (an)
         {
-            case 4096:  // -4096:
-                xa = finetangent[2048];    // finecosine[-4096]
-                ya = finetangent[0];       // finesine[-4096]
+            case 4096:                  // -4096:
+                xa = finetangent[2048]; // finecosine[-4096]
+                ya = finetangent[0];    // finesine[-4096]
                 break;
-            case 5120:  // -3072:
-                xa = finetangent[3072];    // finecosine[-3072]
-                ya = finetangent[1024];    // finesine[-3072]
+            case 5120:                  // -3072:
+                xa = finetangent[3072]; // finecosine[-3072]
+                ya = finetangent[1024]; // finesine[-3072]
                 break;
-            case 6144:  // -2048:
-                xa = finesine[0];          // finecosine[-2048]
-                ya = finetangent[2048];    // finesine[-2048]
+            case 6144:                  // -2048:
+                xa = finesine[0];       // finecosine[-2048]
+                ya = finetangent[2048]; // finesine[-2048]
                 break;
-            case 7168:  // -1024:
-                xa = finesine[1024];       // finecosine[-1024]
-                ya = finetangent[3072];    // finesine[-1024]
+            case 7168:                  // -1024:
+                xa = finesine[1024];    // finecosine[-1024]
+                ya = finetangent[3072]; // finesine[-1024]
                 break;
             case 0:
             case 1024:
@@ -1841,12 +1816,12 @@ G_CheckSpot
                 xa = ya = 0;
                 break;
         }
-        mo = P_SpawnMobj(x + 20 * xa, y + 20 * ya,
-                         ss->sector->floorheight, MT_TFOG);
+        mo = P_SpawnMobj(x + 20 * xa, y + 20 * ya, ss->sector->floorheight,
+                         MT_TFOG);
     }
 
     if (players[consoleplayer].viewz != 1)
-	S_StartSound (mo, sfx_telept);	// don't start sound on first frame
+        S_StartSound(mo, sfx_telept); // don't start sound on first frame
 
     return true;
 }
@@ -1857,33 +1832,33 @@ G_CheckSpot
 // Spawns a player at one of the random death match spots
 // called at level load and each death
 //
-void G_DeathMatchSpawnPlayer (int playernum)
+void G_DeathMatchSpawnPlayer(int playernum)
 {
-    int             i,j;
-    int				selections;
+    int i, j;
+    int selections;
 
     selections = deathmatch_p - deathmatchstarts;
     if (selections < 4)
-	I_Error ("Only %i deathmatch spots, 4 required", selections);
+        I_Error("Only %i deathmatch spots, 4 required", selections);
 
-    for (j=0 ; j<20 ; j++)
+    for (j = 0; j < 20; j++)
     {
-	i = P_Random() % selections;
-	if (G_CheckSpot (playernum, &deathmatchstarts[i]) )
-	{
-	    deathmatchstarts[i].type = playernum+1;
-	    P_SpawnPlayer (&deathmatchstarts[i]);
-	    return;
-	}
+        i = P_Random() % selections;
+        if (G_CheckSpot(playernum, &deathmatchstarts[i]))
+        {
+            deathmatchstarts[i].type = playernum + 1;
+            P_SpawnPlayer(&deathmatchstarts[i]);
+            return;
+        }
     }
 
     // no good spot, so the player will probably get stuck
-    P_SpawnPlayer (&playerstarts[playernum]);
+    P_SpawnPlayer(&playerstarts[playernum]);
 }
 
 // [crispy] clear the "savename" variable,
 // i.e. restart level from scratch upon resurrection
-static inline void G_ClearSavename ()
+static inline void G_ClearSavename()
 {
     M_StringCopy(savename, "", sizeof(savename));
 }
@@ -1891,110 +1866,103 @@ static inline void G_ClearSavename ()
 //
 // G_DoReborn
 //
-void G_DoReborn (int playernum)
+void G_DoReborn(int playernum)
 {
-    int                             i;
+    int i;
 
     if (!netgame)
     {
-	// [crispy] if the player dies and the game has been loaded or saved
-	// in the mean time, reload that savegame instead of restarting the level
-	// when "Run" is pressed upon resurrection
-	if (crispy->singleplayer && *savename && speedkeydown())
-	gameaction = ga_loadgame;
-	else
-	{
-	// reload the level from scratch
-	gameaction = ga_loadlevel;
-	G_ClearSavename();
-	}
+        // [crispy] if the player dies and the game has been loaded or saved
+        // in the mean time, reload that savegame instead of restarting the level
+        // when "Run" is pressed upon resurrection
+        if (crispy->singleplayer && *savename && speedkeydown())
+            gameaction = ga_loadgame;
+        else
+        {
+            // reload the level from scratch
+            gameaction = ga_loadlevel;
+            G_ClearSavename();
+        }
     }
     else
     {
-	// respawn at the start
+        // respawn at the start
 
-	// first dissasociate the corpse
-	players[playernum].mo->player = NULL;
+        // first dissasociate the corpse
+        players[playernum].mo->player = NULL;
 
-	// spawn at random spot if in death match
-	if (deathmatch)
-	{
-	    G_DeathMatchSpawnPlayer (playernum);
-	    return;
-	}
+        // spawn at random spot if in death match
+        if (deathmatch)
+        {
+            G_DeathMatchSpawnPlayer(playernum);
+            return;
+        }
 
-	if (G_CheckSpot (playernum, &playerstarts[playernum]) )
-	{
-	    P_SpawnPlayer (&playerstarts[playernum]);
-	    return;
-	}
+        if (G_CheckSpot(playernum, &playerstarts[playernum]))
+        {
+            P_SpawnPlayer(&playerstarts[playernum]);
+            return;
+        }
 
-	// try to spawn at one of the other players spots
-	for (i=0 ; i<MAXPLAYERS ; i++)
-	{
-	    if (G_CheckSpot (playernum, &playerstarts[i]) )
-	    {
-		playerstarts[i].type = playernum+1;	// fake as other player
-		P_SpawnPlayer (&playerstarts[i]);
-		playerstarts[i].type = i+1;		// restore
-		return;
-	    }
-	    // he's going to be inside something.  Too bad.
-	}
-	P_SpawnPlayer (&playerstarts[playernum]);
+        // try to spawn at one of the other players spots
+        for (i = 0; i < MAXPLAYERS; i++)
+        {
+            if (G_CheckSpot(playernum, &playerstarts[i]))
+            {
+                playerstarts[i].type = playernum + 1; // fake as other player
+                P_SpawnPlayer(&playerstarts[i]);
+                playerstarts[i].type = i + 1; // restore
+                return;
+            }
+            // he's going to be inside something.  Too bad.
+        }
+        P_SpawnPlayer(&playerstarts[playernum]);
     }
 }
 
 
-void G_ScreenShot (void)
+void G_ScreenShot(void)
 {
     gameaction = ga_screenshot;
 }
 
 
-
 // DOOM Par Times
-static const int pars[7][10] =
-{
+static const int pars[7][10] = {
     {0},
-    {0,30,75,120,90,165,180,180,30,165},
-    {0,90,90,90,120,90,360,240,30,170},
-    {0,90,45,90,150,90,90,165,30,135}
+    {0, 30, 75, 120, 90, 165, 180, 180, 30, 165},
+    {0, 90, 90, 90, 120, 90, 360, 240, 30, 170},
+    {0, 90, 45, 90, 150, 90, 90, 165, 30, 135}
     // [crispy] Episode 4 par times from the BFG Edition
-   ,{0,165,255,135,150,180,390,135,360,180}
+    ,
+    {0, 165, 255, 135, 150, 180, 390, 135, 360, 180}
     // [crispy] Episode 5 par times from Sigil v1.21
-   ,{0,90,150,360,420,780,420,780,300,660}
+    ,
+    {0, 90, 150, 360, 420, 780, 420, 780, 300, 660}
     // [crispy] Episode 6 par times from Sigil II v1.0
-   ,{0,480,300,240,420,510,840,960,390,450}
-};
+    ,
+    {0, 480, 300, 240, 420, 510, 840, 960, 390, 450}};
 
 // DOOM II Par Times
-static const int cpars[32] =
-{
-    30,90,120,120,90,150,120,120,270,90,	//  1-10
-    210,150,150,150,210,150,420,150,210,150,	// 11-20
-    240,150,180,150,150,300,330,420,300,180,	// 21-30
-    120,30					// 31-32
+static const int cpars[32] = {
+    30,  90,  120, 120, 90,  150, 120, 120, 270, 90,  //  1-10
+    210, 150, 150, 150, 210, 150, 420, 150, 210, 150, // 11-20
+    240, 150, 180, 150, 150, 300, 330, 420, 300, 180, // 21-30
+    120, 30                                           // 31-32
 };
 
 // Chex Quest Par Times
-static const int chexpars[6] =
-{
-    0,120,360,480,200,360
-};
+static const int chexpars[6] = {0, 120, 360, 480, 200, 360};
 
 // [crispy] No Rest For The Living par times from the BFG Edition
-static const int npars[9] =
-{
-    75,105,120,105,210,105,165,105,135
-};
+static const int npars[9] = {75, 105, 120, 105, 210, 105, 165, 105, 135};
 
 //
 // G_DoCompleted
 //
-boolean		secretexit;
+boolean secretexit;
 
-void G_ExitLevel (void)
+void G_ExitLevel(void)
 {
     secretexit = false;
     G_ClearSavename();
@@ -2002,14 +1970,13 @@ void G_ExitLevel (void)
 }
 
 // Here's for the german edition.
-void G_SecretExitLevel (void)
+void G_SecretExitLevel(void)
 {
     // IF NO WOLF3D LEVELS, NO SECRET EXIT!
-    if ( (gamemode == commercial)
-      && (W_CheckNumForName("map31")<0))
-	secretexit = false;
+    if ((gamemode == commercial) && (W_CheckNumForName("map31") < 0))
+        secretexit = false;
     else
-	secretexit = true;
+        secretexit = true;
     G_ClearSavename();
     gameaction = ga_completed;
 }
@@ -2030,8 +1997,8 @@ static void G_FormatLevelStatTime(char *str, int tics)
 
     if (exitHours)
     {
-        M_snprintf(str, TIMESTRSIZE, "%d:%02d:%05.2f",
-                    exitHours, exitMinutes, exitSeconds);
+        M_snprintf(str, TIMESTRSIZE, "%d:%02d:%05.2f", exitHours, exitMinutes,
+                   exitSeconds);
     }
     else
     {
@@ -2065,7 +2032,9 @@ static void G_WriteLevelStat(void)
 
     if (fstream == NULL)
     {
-        fprintf(stderr, "G_WriteLevelStat: Unable to open levelstat.txt for writing!\n");
+        fprintf(
+            stderr,
+            "G_WriteLevelStat: Unable to open levelstat.txt for writing!\n");
         return;
     }
 
@@ -2075,8 +2044,8 @@ static void G_WriteLevelStat(void)
     }
     else
     {
-        M_snprintf(levelString, sizeof(levelString), "E%dM%d",
-                    gameepisode, gamemap);
+        M_snprintf(levelString, sizeof(levelString), "E%dM%d", gameepisode,
+                   gamemap);
     }
 
     G_FormatLevelStatTime(levelTimeString, leveltime);
@@ -2100,16 +2069,16 @@ static void G_WriteLevelStat(void)
     }
 
     fprintf(fstream, "%s%s - %s (%s)  K: %d/%d  I: %d/%d  S: %d/%d\n",
-            levelString, (secretexit ? "s" : ""),
-            levelTimeString, totalTimeString, playerKills, totalkills,
-            playerItems, totalitems, playerSecrets, totalsecret);
+            levelString, (secretexit ? "s" : ""), levelTimeString,
+            totalTimeString, playerKills, totalkills, playerItems, totalitems,
+            playerSecrets, totalsecret);
 
     fclose(fstream);
 }
 
-void G_DoCompleted (void)
+void G_DoCompleted(void)
 {
-    int             i;
+    int i;
 
     // [crispy] Write level statistics upon exit
     if (M_ParmExists("-levelstat"))
@@ -2119,12 +2088,12 @@ void G_DoCompleted (void)
 
     gameaction = ga_nothing;
 
-    for (i=0 ; i<MAXPLAYERS ; i++)
-	if (playeringame[i])
-	    G_PlayerFinishLevel (i);        // take away cards and stuff
+    for (i = 0; i < MAXPLAYERS; i++)
+        if (playeringame[i])
+            G_PlayerFinishLevel(i); // take away cards and stuff
 
     if (automapactive)
-	AM_Stop ();
+        AM_Stop();
 
     if (gamemode != commercial)
     {
@@ -2143,24 +2112,24 @@ void G_DoCompleted (void)
         }
         else
         {
-            switch(gamemap)
+            switch (gamemap)
             {
-            // [crispy] display tally screen after ExM8
-            /*
+                    // [crispy] display tally screen after ExM8
+                    /*
               case 8:
                 gameaction = ga_victory;
                 return;
             */
-              case 9:
-                for (i=0 ; i<MAXPLAYERS ; i++)
-                    players[i].didsecret = true;
-                break;
+                case 9:
+                    for (i = 0; i < MAXPLAYERS; i++)
+                        players[i].didsecret = true;
+                    break;
             }
         }
     }
 
-// [crispy] disable redundant code
-/*
+    // [crispy] disable redundant code
+    /*
 //#if 0  Hmmm - why?
     if ( (gamemap == 8)
 	 && (gamemode != commercial) )
@@ -2182,26 +2151,30 @@ void G_DoCompleted (void)
 
 
     wminfo.didsecret = players[consoleplayer].didsecret;
-    wminfo.epsd = gameepisode -1;
-    wminfo.last = gamemap -1;
+    wminfo.epsd = gameepisode - 1;
+    wminfo.last = gamemap - 1;
 
     // wminfo.next is 0 biased, unlike gamemap
-    if ( gamemission == pack_nerve && gamemap <= 9 )
+    if (gamemission == pack_nerve && gamemap <= 9)
     {
-	if (secretexit)
-	    switch(gamemap)
-	    {
-	      case  4: wminfo.next = 8; break;
-	    }
-	else
-	    switch(gamemap)
-	    {
-	      case  9: wminfo.next = 4; break;
-	      default: wminfo.next = gamemap;
-	    }
+        if (secretexit)
+            switch (gamemap)
+            {
+                case 4:
+                    wminfo.next = 8;
+                    break;
+            }
+        else
+            switch (gamemap)
+            {
+                case 9:
+                    wminfo.next = 4;
+                    break;
+                default:
+                    wminfo.next = gamemap;
+            }
     }
-    else
-    if ( gamemission == pack_master && gamemap <= 21 )
+    else if (gamemission == pack_master && gamemap <= 21)
     {
         wminfo.next = gamemap;
         // [crispy] kex masterlevel secret detour?
@@ -2215,64 +2188,69 @@ void G_DoCompleted (void)
                 wminfo.next = 18;
         }
     }
-    else
-    if ( gamemode == commercial)
+    else if (gamemode == commercial)
     {
-	if (secretexit)
-	    if (gamemap == 2 && critical->havemap33)
-	      wminfo.next = 32;
-	    else
-	    switch(gamemap)
-	    {
-	      case 15: wminfo.next = 30; break;
-	      case 31: wminfo.next = 31; break;
-	    }
-	else
-	    if (gamemap == 33 && critical->havemap33)
-	      wminfo.next = 2;
-	    else
-	    switch(gamemap)
-	    {
-	      case 31:
-	      case 32: wminfo.next = 15; break;
-	      default: wminfo.next = gamemap;
-	    }
+        if (secretexit)
+            if (gamemap == 2 && critical->havemap33)
+                wminfo.next = 32;
+            else
+                switch (gamemap)
+                {
+                    case 15:
+                        wminfo.next = 30;
+                        break;
+                    case 31:
+                        wminfo.next = 31;
+                        break;
+                }
+        else if (gamemap == 33 && critical->havemap33)
+            wminfo.next = 2;
+        else
+            switch (gamemap)
+            {
+                case 31:
+                case 32:
+                    wminfo.next = 15;
+                    break;
+                default:
+                    wminfo.next = gamemap;
+            }
     }
     else
     {
-	if (secretexit)
-	{
-	    if (critical->havee1m10 && gameepisode == 1 && gamemap == 1)
-	    wminfo.next = 9; // [crispy] go to secret level E1M10 "Sewers"
-	    else
-	    wminfo.next = 8; 	// go to secret level
-	}
-	else if (gamemap == 9)
-	{
-	    // returning from secret level
-	    switch (gameepisode)
-	    {
-	      case 1:
-	      case 6:
-		wminfo.next = 3;
-		break;
-	      case 2:
-		wminfo.next = 5;
-		break;
-	      case 3:
-	      case 5: // [crispy] Sigil
-		wminfo.next = 6;
-		break;
-	      case 4:
-		wminfo.next = 2;
-		break;
-	    }
-	}
-	else
-	if (critical->havee1m10 && gameepisode == 1 && gamemap == 10)
-	    wminfo.next = 1; // [crispy] returning from secret level E1M10 "Sewers"
-	else
-	    wminfo.next = gamemap;          // go to next level
+        if (secretexit)
+        {
+            if (critical->havee1m10 && gameepisode == 1 && gamemap == 1)
+                wminfo.next = 9; // [crispy] go to secret level E1M10 "Sewers"
+            else
+                wminfo.next = 8; // go to secret level
+        }
+        else if (gamemap == 9)
+        {
+            // returning from secret level
+            switch (gameepisode)
+            {
+                case 1:
+                case 6:
+                    wminfo.next = 3;
+                    break;
+                case 2:
+                    wminfo.next = 5;
+                    break;
+                case 3:
+                case 5: // [crispy] Sigil
+                    wminfo.next = 6;
+                    break;
+                case 4:
+                    wminfo.next = 2;
+                    break;
+            }
+        }
+        else if (critical->havee1m10 && gameepisode == 1 && gamemap == 10)
+            wminfo.next =
+                1; // [crispy] returning from secret level E1M10 "Sewers"
+        else
+            wminfo.next = gamemap; // go to next level
     }
 
     wminfo.maxkills = totalkills;
@@ -2292,64 +2270,63 @@ void G_DoCompleted (void)
             memcpy(&cpars32, DEH_String(GAMMALVL0), sizeof(int));
             cpars32 = LONG(cpars32);
 
-            wminfo.partime = TICRATE*cpars32;
+            wminfo.partime = TICRATE * cpars32;
         }
         // [crispy] support [PARS] sections in BEX files
-        else if (bex_cpars[gamemap-1])
+        else if (bex_cpars[gamemap - 1])
         {
-            wminfo.partime = TICRATE*bex_cpars[gamemap-1];
+            wminfo.partime = TICRATE * bex_cpars[gamemap - 1];
         }
         // [crispy] par times for NRFTL
         else if (gamemission == pack_nerve)
         {
-            wminfo.partime = TICRATE*npars[gamemap-1];
+            wminfo.partime = TICRATE * npars[gamemap - 1];
         }
         else
         {
-            wminfo.partime = TICRATE*cpars[gamemap-1];
+            wminfo.partime = TICRATE * cpars[gamemap - 1];
         }
     }
     // Doom episode 4 doesn't have a par time, so this
     // overflows into the cpars array.
     else if (gameepisode < 4 ||
-        // [crispy] single player par times for episode 4
-        (gameepisode == 4 && crispy->singleplayer) ||
-        // [crispy] par times for Sigil
-        gameepisode == 5 ||
-        // [crispy] par times for Sigil II
-        gameepisode == 6)
+             // [crispy] single player par times for episode 4
+             (gameepisode == 4 && crispy->singleplayer) ||
+             // [crispy] par times for Sigil
+             gameepisode == 5 ||
+             // [crispy] par times for Sigil II
+             gameepisode == 6)
     {
         // [crispy] support [PARS] sections in BEX files
         if (bex_pars[gameepisode][gamemap])
         {
-            wminfo.partime = TICRATE*bex_pars[gameepisode][gamemap];
+            wminfo.partime = TICRATE * bex_pars[gameepisode][gamemap];
+        }
+        else if (gameversion == exe_chex && gameepisode == 1 && gamemap < 6)
+        {
+            wminfo.partime = TICRATE * chexpars[gamemap];
         }
         else
-        if (gameversion == exe_chex && gameepisode == 1 && gamemap < 6)
         {
-            wminfo.partime = TICRATE*chexpars[gamemap];
-        }
-        else
-        {
-            wminfo.partime = TICRATE*pars[gameepisode][gamemap];
+            wminfo.partime = TICRATE * pars[gameepisode][gamemap];
         }
     }
     else
     {
-        wminfo.partime = TICRATE*cpars[gamemap];
+        wminfo.partime = TICRATE * cpars[gamemap];
     }
 
     wminfo.pnum = consoleplayer;
 
-    for (i=0 ; i<MAXPLAYERS ; i++)
+    for (i = 0; i < MAXPLAYERS; i++)
     {
-	wminfo.plyr[i].in = playeringame[i];
-	wminfo.plyr[i].skills = players[i].killcount;
-	wminfo.plyr[i].sitems = players[i].itemcount;
-	wminfo.plyr[i].ssecret = players[i].secretcount;
-	wminfo.plyr[i].stime = leveltime;
-	memcpy (wminfo.plyr[i].frags, players[i].frags
-		, sizeof(wminfo.plyr[i].frags));
+        wminfo.plyr[i].in = playeringame[i];
+        wminfo.plyr[i].skills = players[i].killcount;
+        wminfo.plyr[i].sitems = players[i].itemcount;
+        wminfo.plyr[i].ssecret = players[i].secretcount;
+        wminfo.plyr[i].stime = leveltime;
+        memcpy(wminfo.plyr[i].frags, players[i].frags,
+               sizeof(wminfo.plyr[i].frags));
     }
 
     // [crispy] CPhipps - total time for all completed levels
@@ -2366,90 +2343,86 @@ void G_DoCompleted (void)
     // [crispy] no statdump output for ExM8
     if (gamemode == commercial || gamemap != 8)
     {
-    StatCopy(&wminfo);
+        StatCopy(&wminfo);
     }
 
-    WI_Start (&wminfo);
+    WI_Start(&wminfo);
 }
 
 
 //
 // G_WorldDone
 //
-void G_WorldDone (void)
+void G_WorldDone(void)
 {
     gameaction = ga_worlddone;
 
     if (secretexit)
-      // [crispy] special-casing for E1M10 "Sewers" support
-      // i.e. avoid drawing the splat for E1M9 already
-      if (!crispy->havee1m10 || gameepisode != 1 || gamemap != 1)
-	players[consoleplayer].didsecret = true;
+        // [crispy] special-casing for E1M10 "Sewers" support
+        // i.e. avoid drawing the splat for E1M9 already
+        if (!crispy->havee1m10 || gameepisode != 1 || gamemap != 1)
+            players[consoleplayer].didsecret = true;
 
-    if ( gamemission == pack_nerve )
+    if (gamemission == pack_nerve)
     {
-	switch (gamemap)
-	{
-	  case 8:
-	    F_StartFinale ();
-	    break;
-	}
+        switch (gamemap)
+        {
+            case 8:
+                F_StartFinale();
+                break;
+        }
     }
-    else
-    if ( gamemission == pack_master )
+    else if (gamemission == pack_master)
     {
-    if (D_CheckMasterlevelKex())
-    {
-        if (gamemap == 20)
-        F_StartFinale ();
+        if (D_CheckMasterlevelKex())
+        {
+            if (gamemap == 20)
+                F_StartFinale();
+        }
+        else
+        {
+            switch (gamemap)
+            {
+                case 20:
+                    if (secretexit)
+                        break;
+                case 21:
+                    F_StartFinale();
+                    break;
+            }
+        }
     }
-    else
+    else if (gamemode == commercial)
     {
-	switch (gamemap)
-	{
-	  case 20:
-	    if (secretexit)
-		break;
-	  case 21:
-	    F_StartFinale ();
-	    break;
-	}
-    }
-    }
-    else
-    if ( gamemode == commercial )
-    {
-	switch (gamemap)
-	{
-	  case 15:
-	  case 31:
-	    if (!secretexit)
-		break;
-	  case 6:
-	  case 11:
-	  case 20:
-	  case 30:
-	    F_StartFinale ();
-	    break;
-	}
+        switch (gamemap)
+        {
+            case 15:
+            case 31:
+                if (!secretexit)
+                    break;
+            case 6:
+            case 11:
+            case 20:
+            case 30:
+                F_StartFinale();
+                break;
+        }
     }
     // [crispy] display tally screen after ExM8
-    else
-    if ( gamemap == 8 || (gameversion == exe_chex && gamemap == 5) )
+    else if (gamemap == 8 || (gameversion == exe_chex && gamemap == 5))
     {
-	gameaction = ga_victory;
+        gameaction = ga_victory;
     }
 }
 
-void G_DoWorldDone (void)
+void G_DoWorldDone(void)
 {
     gamestate = GS_LEVEL;
-    gamemap = wminfo.next+1;
-    G_DoLoadLevel ();
+    gamemap = wminfo.next + 1;
+    G_DoLoadLevel();
     gameaction = ga_nothing;
     viewactive = true;
 }
-
 
 
 //
@@ -2458,14 +2431,14 @@ void G_DoWorldDone (void)
 //
 
 
-void G_LoadGame (char* name)
+void G_LoadGame(char *name)
 {
     M_StringCopy(savename, name, sizeof(savename));
     gameaction = ga_loadgame;
 }
 
 int savedleveltime = 0; // [crispy] moved here for level time logging
-void G_DoLoadGame (void)
+void G_DoLoadGame(void)
 {
 
     // [crispy] loaded game must always be single player.
@@ -2473,9 +2446,9 @@ void G_DoLoadGame (void)
     // cheat codes and other single player only specifics.
     if (startloadgame == -1)
     {
-	netdemo = false;
-	netgame = false;
-	deathmatch = false;
+        netdemo = false;
+        netgame = false;
+        deathmatch = false;
     }
     gameaction = ga_nothing;
 
@@ -2503,11 +2476,11 @@ void G_DoLoadGame (void)
             return;
         }
         else
-        // [crispy] strings are equal, but not identical
-        if (savewadfilename != W_WadNameForLump(savemaplumpinfo))
-        {
-            free(savewadfilename);
-        }
+            // [crispy] strings are equal, but not identical
+            if (savewadfilename != W_WadNameForLump(savemaplumpinfo))
+            {
+                free(savewadfilename);
+            }
     }
     savewadfilename = NULL;
 
@@ -2516,7 +2489,7 @@ void G_DoLoadGame (void)
     if (!P_ReadSaveGameHeader())
     {
         // [crispy] indicate game version mismatch
-        extern void M_LoadGameVerMismatch ();
+        extern void M_LoadGameVerMismatch();
         M_LoadGameVerMismatch();
         fclose(save_stream);
         return;
@@ -2525,20 +2498,20 @@ void G_DoLoadGame (void)
     savedleveltime = leveltime;
 
     // load a base level
-    G_InitNew (gameskill, gameepisode, gamemap);
+    G_InitNew(gameskill, gameepisode, gamemap);
 
     leveltime = savedleveltime;
     savedleveltime = 0;
 
     // dearchive all the modifications
-    P_UnArchivePlayers ();
-    P_UnArchiveWorld ();
-    P_UnArchiveThinkers ();
-    P_UnArchiveSpecials ();
-    P_RestoreTargets (); // [crispy] restore mobj->target and mobj->tracer pointers
+    P_UnArchivePlayers();
+    P_UnArchiveWorld();
+    P_UnArchiveThinkers();
+    P_UnArchiveSpecials();
+    P_RestoreTargets(); // [crispy] restore mobj->target and mobj->tracer pointers
 
     if (!P_ReadSaveGameEOF())
-	I_Error ("Bad savegame");
+        I_Error("Bad savegame");
 
     // [crispy] read more extended savegame data
     P_ReadExtendedSaveGameData(1);
@@ -2546,15 +2519,15 @@ void G_DoLoadGame (void)
     fclose(save_stream);
 
     if (setsizeneeded)
-	R_ExecuteSetViewSize ();
+        R_ExecuteSetViewSize();
 
     // draw the pattern into the back screen
-    R_FillBackScreen ();
+    R_FillBackScreen();
 
     // [crispy] if the player is dead in this savegame,
     // do not consider it for reload
     if (players[consoleplayer].health <= 0)
-	G_ClearSavename();
+        G_ClearSavename();
 
     // [crisy] once loaded from the command line,
     // the next savegame will be loaded from the menu
@@ -2567,17 +2540,14 @@ void G_DoLoadGame (void)
 // Called by the menu task.
 // Description is a 24 byte text string
 //
-void
-G_SaveGame
-( int	slot,
-  char*	description )
+void G_SaveGame(int slot, char *description)
 {
     savegameslot = slot;
     M_StringCopy(savedescription, description, sizeof(savedescription));
     sendsave = true;
 }
 
-void G_DoSaveGame (void)
+void G_DoSaveGame(void)
 {
     char *savegame_file;
     char *temp_savegame_file;
@@ -2612,20 +2582,23 @@ void G_DoSaveGame (void)
 
     // [crispy] some logging when saving
     {
-	const int ltime = leveltime / TICRATE,
-	          ttime = (totalleveltimes + leveltime) / TICRATE;
-	extern const char *skilltable[];
+        const int ltime = leveltime / TICRATE,
+                  ttime = (totalleveltimes + leveltime) / TICRATE;
+        extern const char *skilltable[];
 
-	fprintf(stderr, "G_DoSaveGame: Episode %d, Map %d, %s, Time %d:%02d:%02d, Total %d:%02d:%02d.\n",
-	        gameepisode, gamemap, skilltable[BETWEEN(0,5,(int) gameskill+1)],
-	        ltime/3600, (ltime%3600)/60, ltime%60,
-	        ttime/3600, (ttime%3600)/60, ttime%60);
+        fprintf(stderr,
+                "G_DoSaveGame: Episode %d, Map %d, %s, Time %d:%02d:%02d, "
+                "Total %d:%02d:%02d.\n",
+                gameepisode, gamemap,
+                skilltable[BETWEEN(0, 5, (int) gameskill + 1)], ltime / 3600,
+                (ltime % 3600) / 60, ltime % 60, ttime / 3600,
+                (ttime % 3600) / 60, ttime % 60);
     }
 
-    P_ArchivePlayers ();
-    P_ArchiveWorld ();
-    P_ArchiveThinkers ();
-    P_ArchiveSpecials ();
+    P_ArchivePlayers();
+    P_ArchiveWorld();
+    P_ArchiveThinkers();
+    P_ArchiveSpecials();
 
     P_WriteSaveGameEOF();
     // [crispy] write extended savegame data
@@ -2669,7 +2642,7 @@ void G_DoSaveGame (void)
     players[consoleplayer].message = DEH_String(GGSAVED);
 
     // draw the pattern into the back screen
-    R_FillBackScreen ();
+    R_FillBackScreen();
 }
 
 
@@ -2678,15 +2651,11 @@ void G_DoSaveGame (void)
 // Can be called by the startup code or the menu task,
 // consoleplayer, displayplayer, playeringame[] should be set.
 //
-skill_t	d_skill;
-int     d_episode;
-int     d_map;
+skill_t d_skill;
+int d_episode;
+int d_map;
 
-void
-G_DeferedInitNew
-( skill_t	skill,
-  int		episode,
-  int		map)
+void G_DeferedInitNew(skill_t skill, int episode, int map)
 {
     d_skill = skill;
     d_episode = episode;
@@ -2697,20 +2666,20 @@ G_DeferedInitNew
     // [crispy] if a new game is started during demo recording, start a new demo
     if (demorecording)
     {
-	// [crispy] reset IDDT cheat when re-starting map during demo recording
-	void AM_ResetIDDTcheat (void);
-	AM_ResetIDDTcheat();
+        // [crispy] reset IDDT cheat when re-starting map during demo recording
+        void AM_ResetIDDTcheat(void);
+        AM_ResetIDDTcheat();
 
-	G_CheckDemoStatus();
-	Z_Free(demoname);
+        G_CheckDemoStatus();
+        Z_Free(demoname);
 
-	G_RecordDemo(orig_demoname);
-	G_BeginRecording();
+        G_RecordDemo(orig_demoname);
+        G_BeginRecording();
     }
 }
 
 
-void G_DoNewGame (void)
+void G_DoNewGame(void)
 {
     demoplayback = false;
     netdemo = false;
@@ -2726,26 +2695,22 @@ void G_DoNewGame (void)
     nomonsters = false;
     */
     consoleplayer = 0;
-    G_InitNew (d_skill, d_episode, d_map);
+    G_InitNew(d_skill, d_episode, d_map);
     gameaction = ga_nothing;
 }
 
 
-void
-G_InitNew
-( skill_t	skill,
-  int		episode,
-  int		map )
+void G_InitNew(skill_t skill, int episode, int map)
 {
     const char *skytexturename;
-    int             i;
+    int i;
     // [crispy] make sure "fast" parameters are really only applied once
     static boolean fast_applied;
 
     if (paused)
     {
-	paused = false;
-	S_ResumeSound ();
+        paused = false;
+        S_ResumeSound();
     }
 
     /*
@@ -2779,103 +2744,101 @@ G_InitNew
     */
 
     if (skill > sk_nightmare)
-	skill = sk_nightmare;
+        skill = sk_nightmare;
 
-  // [crispy] if NRFTL is not available, "episode 2" may mean The Master Levels ("episode 3")
-  if (gamemode == commercial)
-  {
-    if (episode < 1)
-      episode = 1;
-    else
-    if (episode == 2 && !crispy->havenerve)
-      episode = crispy->havemaster ? 3 : 1;
-  }
-
-  // [crispy] only fix episode/map if it doesn't exist
-  if (P_GetNumForMap(episode, map, false) < 0)
-  {
-    if (gameversion >= exe_ultimate)
-    {
-        if (episode == 0)
-        {
-            episode = 4;
-        }
-    }
-    else
+    // [crispy] if NRFTL is not available, "episode 2" may mean The Master Levels ("episode 3")
+    if (gamemode == commercial)
     {
         if (episode < 1)
+            episode = 1;
+        else if (episode == 2 && !crispy->havenerve)
+            episode = crispy->havemaster ? 3 : 1;
+    }
+
+    // [crispy] only fix episode/map if it doesn't exist
+    if (P_GetNumForMap(episode, map, false) < 0)
+    {
+        if (gameversion >= exe_ultimate)
+        {
+            if (episode == 0)
+            {
+                episode = 4;
+            }
+        }
+        else
+        {
+            if (episode < 1)
+            {
+                episode = 1;
+            }
+            if (episode > 3)
+            {
+                episode = 3;
+            }
+        }
+
+        if (episode > 1 && gamemode == shareware)
         {
             episode = 1;
         }
-        if (episode > 3)
+
+        if (map < 1)
+            map = 1;
+
+        if ((map > 9) && (gamemode != commercial))
         {
-            episode = 3;
+            // [crispy] support E1M10 "Sewers"
+            if (!crispy->havee1m10 || episode != 1)
+                map = 9;
+            else
+                map = 10;
         }
     }
 
-    if (episode > 1 && gamemode == shareware)
-    {
-        episode = 1;
-    }
-
-    if (map < 1)
-	map = 1;
-
-    if ( (map > 9)
-	 && ( gamemode != commercial) )
-    {
-      // [crispy] support E1M10 "Sewers"
-      if (!crispy->havee1m10 || episode != 1)
-      map = 9;
-      else
-      map = 10;
-    }
-  }
-
-    M_ClearRandom ();
+    M_ClearRandom();
 
     // [crispy] Spider Mastermind gets increased health in Sigil II. Normally
     // the Sigil II DEH handles this, but we don't load the DEH if the WAD gets
     // sideloaded.
-    if (crispy->havesigil2 && crispy->havesigil2 != (char *)-1)
+    if (crispy->havesigil2 && crispy->havesigil2 != (char *) -1)
     {
         mobjinfo[MT_SPIDER].spawnhealth = (episode == 6) ? 9000 : 3000;
     }
 
-    if (skill == sk_nightmare || respawnparm )
-	respawnmonsters = true;
+    if (skill == sk_nightmare || respawnparm)
+        respawnmonsters = true;
     else
-	respawnmonsters = false;
+        respawnmonsters = false;
 
     // [crispy] make sure "fast" parameters are really only applied once
     if ((fastparm || skill == sk_nightmare) && !fast_applied)
     {
-	for (i=S_SARG_RUN1 ; i<=S_SARG_PAIN2 ; i++)
-	    // [crispy] Fix infinite loop caused by Demon speed bug
-	    if (states[i].tics > 1)
-	    {
-	    states[i].tics >>= 1;
-	    }
-	mobjinfo[MT_BRUISERSHOT].speed = 20*FRACUNIT;
-	mobjinfo[MT_HEADSHOT].speed = 20*FRACUNIT;
-	mobjinfo[MT_TROOPSHOT].speed = 20*FRACUNIT;
-	fast_applied = true;
+        for (i = S_SARG_RUN1; i <= S_SARG_PAIN2; i++)
+            // [crispy] Fix infinite loop caused by Demon speed bug
+            if (states[i].tics > 1)
+            {
+                states[i].tics >>= 1;
+            }
+        mobjinfo[MT_BRUISERSHOT].speed = 20 * FRACUNIT;
+        mobjinfo[MT_HEADSHOT].speed = 20 * FRACUNIT;
+        mobjinfo[MT_TROOPSHOT].speed = 20 * FRACUNIT;
+        fast_applied = true;
     }
     else if (!fastparm && skill != sk_nightmare && fast_applied)
     {
-	for (i=S_SARG_RUN1 ; i<=S_SARG_PAIN2 ; i++)
-	    states[i].tics <<= 1;
-	mobjinfo[MT_BRUISERSHOT].speed = 15*FRACUNIT;
-	mobjinfo[MT_HEADSHOT].speed = 10*FRACUNIT;
-	mobjinfo[MT_TROOPSHOT].speed = 10*FRACUNIT;
-	fast_applied = false;
+        for (i = S_SARG_RUN1; i <= S_SARG_PAIN2; i++)
+            states[i].tics <<= 1;
+        mobjinfo[MT_BRUISERSHOT].speed = 15 * FRACUNIT;
+        mobjinfo[MT_HEADSHOT].speed = 10 * FRACUNIT;
+        mobjinfo[MT_TROOPSHOT].speed = 10 * FRACUNIT;
+        fast_applied = false;
     }
 
     // force players to be initialized upon first level load
-    for (i=0 ; i<MAXPLAYERS ; i++)
-	players[i].playerstate = PST_REBORN;
+    for (i = 0; i < MAXPLAYERS; i++)
+        players[i].playerstate = PST_REBORN;
 
-    usergame = true;                // will be set false if a demo
+    usergame = true; // will be set false if a demo
     paused = false;
     demoplayback = false;
     automapactive = false;
@@ -2913,61 +2876,61 @@ G_InitNew
     {
         switch (gameepisode)
         {
-          default:
-          case 1:
-            skytexturename = "SKY1";
-            break;
-          case 2:
-            skytexturename = "SKY2";
-            break;
-          case 3:
-            skytexturename = "SKY3";
-            break;
-          case 4:        // Special Edition sky
-            skytexturename = "SKY4";
-            break;
-          case 5:        // [crispy] Sigil
-            skytexturename = "SKY5_ZD";
-            if (R_CheckTextureNumForName(DEH_String(skytexturename)) == -1)
-            {
+            default:
+            case 1:
+                skytexturename = "SKY1";
+                break;
+            case 2:
+                skytexturename = "SKY2";
+                break;
+            case 3:
                 skytexturename = "SKY3";
-            }
-            break;
-          case 6:        // [crispy] Sigil II
-            skytexturename = "SKY6_ZD";
-            if (R_CheckTextureNumForName(DEH_String(skytexturename)) == -1)
-            {
-                skytexturename = "SKY3";
-            }
-            break;
+                break;
+            case 4: // Special Edition sky
+                skytexturename = "SKY4";
+                break;
+            case 5: // [crispy] Sigil
+                skytexturename = "SKY5_ZD";
+                if (R_CheckTextureNumForName(DEH_String(skytexturename)) == -1)
+                {
+                    skytexturename = "SKY3";
+                }
+                break;
+            case 6: // [crispy] Sigil II
+                skytexturename = "SKY6_ZD";
+                if (R_CheckTextureNumForName(DEH_String(skytexturename)) == -1)
+                {
+                    skytexturename = "SKY3";
+                }
+                break;
         }
         skytexturename = DEH_String(skytexturename);
         skytexture = R_TextureNumForName(skytexturename);
     }
 
-    G_DoLoadLevel ();
+    G_DoLoadLevel();
 }
 
 
 //
 // DEMO RECORDING
 //
-#define DEMOMARKER		0x80
+#define DEMOMARKER 0x80
 
 // [crispy] demo progress bar and timer widget
 int defdemotics = 0, deftotaldemotics;
 // [crispy] moved here
 static const char *defdemoname;
 
-void G_ReadDemoTiccmd (ticcmd_t* cmd)
+void G_ReadDemoTiccmd(ticcmd_t *cmd)
 {
     if (*demo_p == DEMOMARKER)
     {
-	last_cmd = cmd; // [crispy] remember last cmd to track joins
+        last_cmd = cmd; // [crispy] remember last cmd to track joins
 
-	// end of demo data stream
-	G_CheckDemoStatus ();
-	return;
+        // end of demo data stream
+        G_CheckDemoStatus();
+        return;
     }
 
     // [crispy] if demo playback is quit by pressing 'q',
@@ -2975,31 +2938,31 @@ void G_ReadDemoTiccmd (ticcmd_t* cmd)
     // continue recording the demo under a different name
     if (gamekeydown[key_demo_quit] && singledemo && !netgame)
     {
-	byte *actualbuffer = demobuffer;
-	char *actualname = M_StringDuplicate(defdemoname);
+        byte *actualbuffer = demobuffer;
+        char *actualname = M_StringDuplicate(defdemoname);
 
-	gamekeydown[key_demo_quit] = false;
+        gamekeydown[key_demo_quit] = false;
 
-	// [crispy] redraw status bar to get rid of demo progress bar
-	ST_Drawer(viewheight == SCREENHEIGHT, true);
+        // [crispy] redraw status bar to get rid of demo progress bar
+        ST_Drawer(viewheight == SCREENHEIGHT, true);
 
-	// [crispy] find a new name for the continued demo
-	G_RecordDemo(actualname);
-	free(actualname);
+        // [crispy] find a new name for the continued demo
+        G_RecordDemo(actualname);
+        free(actualname);
 
-	// [crispy] discard the newly allocated demo buffer
-	Z_Free(demobuffer);
-	demobuffer = actualbuffer;
+        // [crispy] discard the newly allocated demo buffer
+        Z_Free(demobuffer);
+        demobuffer = actualbuffer;
 
-	last_cmd = cmd; // [crispy] remember last cmd to track joins
+        last_cmd = cmd; // [crispy] remember last cmd to track joins
 
-	// [crispy] continue recording
-	G_CheckDemoStatus();
-	return;
+        // [crispy] continue recording
+        G_CheckDemoStatus();
+        return;
     }
 
-    cmd->forwardmove = ((signed char)*demo_p++);
-    cmd->sidemove = ((signed char)*demo_p++);
+    cmd->forwardmove = ((signed char) *demo_p++);
+    cmd->sidemove = ((signed char) *demo_p++);
 
     // If this is a longtics demo, read back in higher resolution
 
@@ -3010,10 +2973,10 @@ void G_ReadDemoTiccmd (ticcmd_t* cmd)
     }
     else
     {
-        cmd->angleturn = ((unsigned char) *demo_p++)<<8;
+        cmd->angleturn = ((unsigned char) *demo_p++) << 8;
     }
 
-    cmd->buttons = (unsigned char)*demo_p++;
+    cmd->buttons = (unsigned char) *demo_p++;
 }
 
 // Increase the size of the demo buffer to allow unlimited demos
@@ -3048,12 +3011,12 @@ static void IncreaseDemoBuffer(void)
     demoend = demobuffer + new_length;
 }
 
-void G_WriteDemoTiccmd (ticcmd_t* cmd)
+void G_WriteDemoTiccmd(ticcmd_t *cmd)
 {
     byte *demo_start;
 
-    if (gamekeydown[key_demo_quit])           // press q to end demo recording
-	G_CheckDemoStatus ();
+    if (gamekeydown[key_demo_quit]) // press q to end demo recording
+        G_CheckDemoStatus();
 
     demo_start = demo_p;
 
@@ -3097,15 +3060,14 @@ void G_WriteDemoTiccmd (ticcmd_t* cmd)
         }
     }
 
-    G_ReadDemoTiccmd (cmd);         // make SURE it is exactly the same
+    G_ReadDemoTiccmd(cmd); // make SURE it is exactly the same
 }
-
 
 
 //
 // G_RecordDemo
 //
-void G_RecordDemo (const char *name)
+void G_RecordDemo(const char *name)
 {
     size_t demoname_size;
     int i;
@@ -3118,7 +3080,7 @@ void G_RecordDemo (const char *name)
     // [crispy] the name originally chosen for the demo, i.e. without "-00000"
     if (!orig_demoname)
     {
-	orig_demoname = name;
+        orig_demoname = name;
     }
 
     usergame = false;
@@ -3127,10 +3089,10 @@ void G_RecordDemo (const char *name)
     M_snprintf(demoname, demoname_size, "%s.lmp", name);
 
     // [crispy] prevent overriding demos by adding a file name suffix
-    for ( ; j <= 99999 && (fp = fopen(demoname, "rb")) != NULL; j++)
+    for (; j <= 99999 && (fp = fopen(demoname, "rb")) != NULL; j++)
     {
-	M_snprintf(demoname, demoname_size, "%s-%05d.lmp", name, j);
-	fclose (fp);
+        M_snprintf(demoname, demoname_size, "%s-%05d.lmp", name, j);
+        fclose(fp);
     }
 
     maxsize = 0x20000;
@@ -3145,8 +3107,8 @@ void G_RecordDemo (const char *name)
 
     i = M_CheckParmWithArgs("-maxdemo", 1);
     if (i)
-	maxsize = atoi(myargv[i+1])*1024;
-    demobuffer = Z_Malloc (maxsize,PU_STATIC,NULL);
+        maxsize = atoi(myargv[i + 1]) * 1024;
+    demobuffer = Z_Malloc(maxsize, PU_STATIC, NULL);
     demoend = demobuffer + maxsize;
 
     demorecording = true;
@@ -3164,14 +3126,14 @@ int G_VanillaVersionCode(void)
         case exe_doom_1_8:
             return 108;
         case exe_doom_1_9:
-        default:  // All other versions are variants on v1.9:
+        default: // All other versions are variants on v1.9:
             return 109;
     }
 }
 
-void G_BeginRecording (void)
+void G_BeginRecording(void)
 {
-    int             i;
+    int i;
 
     demo_p = demobuffer;
 
@@ -3181,8 +3143,8 @@ void G_BeginRecording (void)
     // Record a high resolution "Doom 1.91" demo.
     //
 
-    longtics = D_NonVanillaRecord(M_ParmExists("-longtics"),
-                                  "Doom 1.91 demo format");
+    longtics =
+        D_NonVanillaRecord(M_ParmExists("-longtics"), "Doom 1.91 demo format");
 
     // If not recording a longtics demo, record in low res
     lowres_turn = !longtics;
@@ -3208,8 +3170,8 @@ void G_BeginRecording (void)
         *demo_p++ = consoleplayer;
     }
 
-    for (i=0 ; i<MAXPLAYERS ; i++)
-	*demo_p++ = playeringame[i];
+    for (i = 0; i < MAXPLAYERS; i++)
+        *demo_p++ = playeringame[i];
 }
 
 
@@ -3227,8 +3189,8 @@ void G_DeferedPlayDemo(const char *name)
     // in demo warp mode or to the end of the demo in continue mode
     if (crispy->demowarp || demorecording)
     {
-	nodrawers = true;
-	singletics = true;
+        nodrawers = true;
+        singletics = true;
     }
 }
 
@@ -3267,13 +3229,13 @@ static const char *DemoVersionDescription(int version)
     }
     else
     {
-        M_snprintf(resultbuf, sizeof(resultbuf),
-                   "%i.%i (unknown)", version / 100, version % 100);
+        M_snprintf(resultbuf, sizeof(resultbuf), "%i.%i (unknown)",
+                   version / 100, version % 100);
         return resultbuf;
     }
 }
 
-void G_DoPlayDemo (void)
+void G_DoPlayDemo(void)
 {
     skill_t skill;
     int i, lumpnum, episode, map;
@@ -3297,9 +3259,9 @@ void G_DoPlayDemo (void)
     lumplength = W_LumpLength(lumpnum);
     if (lumplength < 0xd)
     {
-	demoplayback = true;
-	G_CheckDemoStatus();
-	return;
+        demoplayback = true;
+        G_CheckDemoStatus();
+        return;
     }
 
     demoversion = *demo_p++;
@@ -3326,23 +3288,23 @@ void G_DoPlayDemo (void)
                               "(read %i, should be %i)\n"
                               "\n"
                               "*** You may need to upgrade your version "
-                                  "of Doom to v1.9. ***\n"
+                              "of Doom to v1.9. ***\n"
                               "    See: https://www.doomworld.com/classicdoom"
-                                        "/info/patches.php\n"
+                              "/info/patches.php\n"
                               "    This appears to be %s.";
 
         if (singledemo)
-        I_Error(message, demoversion, G_VanillaVersionCode(),
-                         DemoVersionDescription(demoversion));
+            I_Error(message, demoversion, G_VanillaVersionCode(),
+                    DemoVersionDescription(demoversion));
         // [crispy] make non-fatal
         else
         {
-        fprintf(stderr, message, demoversion, G_VanillaVersionCode(),
-                         DemoVersionDescription(demoversion));
-	fprintf(stderr, "\n");
-	demoplayback = true;
-	G_CheckDemoStatus();
-	return;
+            fprintf(stderr, message, demoversion, G_VanillaVersionCode(),
+                    DemoVersionDescription(demoversion));
+            fprintf(stderr, "\n");
+            demoplayback = true;
+            G_CheckDemoStatus();
+            return;
         }
     }
 
@@ -3367,16 +3329,16 @@ void G_DoPlayDemo (void)
     }
 
 
-    for (i=0 ; i<MAXPLAYERS ; i++)
-	playeringame[i] = *demo_p++;
+    for (i = 0; i < MAXPLAYERS; i++)
+        playeringame[i] = *demo_p++;
 
-    if (playeringame[1] || M_CheckParm("-solo-net") > 0
-                        || M_CheckParm("-netdemo") > 0)
+    if (playeringame[1] || M_CheckParm("-solo-net") > 0 ||
+        M_CheckParm("-netdemo") > 0)
     {
-	netgame = true;
-	netdemo = true;
-	// [crispy] impossible to continue a multiplayer demo
-	demorecording = false;
+        netgame = true;
+        netdemo = true;
+        // [crispy] impossible to continue a multiplayer demo
+        demorecording = false;
     }
 
     // don't spend a lot of time in loadlevel
@@ -3384,15 +3346,15 @@ void G_DoPlayDemo (void)
     // [crispy] support playing demos from savegames
     if (startloadgame >= 0)
     {
-	M_StringCopy(savename, P_SaveGameFile(startloadgame), sizeof(savename));
-	G_DoLoadGame();
+        M_StringCopy(savename, P_SaveGameFile(startloadgame), sizeof(savename));
+        G_DoLoadGame();
     }
     else
     {
-    G_InitNew (skill, episode, map);
+        G_InitNew(skill, episode, map);
     }
     precache = true;
-    starttime = I_GetTime ();
+    starttime = I_GetTime();
     demostarttic = gametic; // [crispy] fix revenant internal demo bug
 
     usergame = false;
@@ -3402,31 +3364,31 @@ void G_DoPlayDemo (void)
 
     // [crispy] demo progress bar
     {
-	int i, numplayersingame = 0;
-	byte *demo_ptr = demo_p;
+        int i, numplayersingame = 0;
+        byte *demo_ptr = demo_p;
 
-	for (i = 0; i < MAXPLAYERS; i++)
-	{
-	    if (playeringame[i])
-	    {
-		numplayersingame++;
-	    }
-	}
+        for (i = 0; i < MAXPLAYERS; i++)
+        {
+            if (playeringame[i])
+            {
+                numplayersingame++;
+            }
+        }
 
-	deftotaldemotics = defdemotics = 0;
+        deftotaldemotics = defdemotics = 0;
 
-	while (*demo_ptr != DEMOMARKER && (demo_ptr - demobuffer) < lumplength)
-	{
-	    demo_ptr += numplayersingame * (longtics ? 5 : 4);
-	    deftotaldemotics++;
-	}
+        while (*demo_ptr != DEMOMARKER && (demo_ptr - demobuffer) < lumplength)
+        {
+            demo_ptr += numplayersingame * (longtics ? 5 : 4);
+            deftotaldemotics++;
+        }
     }
 }
 
 //
 // G_TimeDemo
 //
-void G_TimeDemo (char* name)
+void G_TimeDemo(char *name)
 {
     //!
     // @category video
@@ -3435,7 +3397,7 @@ void G_TimeDemo (char* name)
     // Disable rendering the screen entirely.
     //
 
-    nodrawers = M_CheckParm ("-nodraw");
+    nodrawers = M_CheckParm("-nodraw");
 
     timingdemo = true;
     singletics = true;
@@ -3519,7 +3481,7 @@ static size_t WriteCmdLineLump(MEMFILE *stream)
 static long WriteFileInfo(const char *name, size_t size, long filepos,
                           MEMFILE *stream)
 {
-    filelump_t fileinfo = { 0 };
+    filelump_t fileinfo = {0};
 
     fileinfo.filepos = LONG(filepos);
     fileinfo.size = LONG(size);
@@ -3548,7 +3510,7 @@ static void G_AddDemoFooter(void)
 
     MEMFILE *stream = mem_fopen_write();
 
-    wadinfo_t header = { "PWAD" };
+    wadinfo_t header = {"PWAD"};
     header.numlumps = LONG(NUM_DEMO_FOOTER_LUMPS);
     mem_fwrite(&header, 1, sizeof(header), stream);
 
@@ -3563,12 +3525,14 @@ static void G_AddDemoFooter(void)
     mem_fseek(stream, 0, MEM_SEEK_END);
 
     filepos = sizeof(wadinfo_t);
-    filepos = WriteFileInfo("PORTNAME", strlen(PACKAGE_STRING), filepos, stream);
-    filepos = WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), filepos, stream);
+    filepos =
+        WriteFileInfo("PORTNAME", strlen(PACKAGE_STRING), filepos, stream);
+    filepos =
+        WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), filepos, stream);
     filepos = WriteFileInfo("CMDLINE", size, filepos, stream);
     WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), filepos, stream);
 
-    mem_get_buf(stream, (void **)&data, &size);
+    mem_get_buf(stream, (void **) &data, &size);
 
     while (demo_p > demoend - size)
     {
@@ -3591,12 +3555,12 @@ static void G_AddDemoFooter(void)
 ===================
 */
 
-boolean G_CheckDemoStatus (void)
+boolean G_CheckDemoStatus(void)
 {
-    int             endtime;
+    int endtime;
 
     // [crispy] catch the last cmd to track joins
-    ticcmd_t* cmd = last_cmd;
+    ticcmd_t *cmd = last_cmd;
     last_cmd = NULL;
 
     if (timingdemo)
@@ -3604,7 +3568,7 @@ boolean G_CheckDemoStatus (void)
         float fps;
         int realtics;
 
-	endtime = I_GetTime ();
+        endtime = I_GetTime();
         realtics = endtime - starttime;
         fps = ((float) gametic * TICRATE) / realtics;
 
@@ -3612,26 +3576,26 @@ boolean G_CheckDemoStatus (void)
         timingdemo = false;
         demoplayback = false;
 
-	I_Error ("timed %i gametics in %i realtics (%f fps)",
-                 gametic, realtics, fps);
+        I_Error("timed %i gametics in %i realtics (%f fps)", gametic, realtics,
+                fps);
     }
 
     if (demoplayback)
     {
         W_ReleaseLumpName(defdemoname);
-	demoplayback = false;
-	netdemo = false;
-	netgame = false;
-	deathmatch = false;
-	playeringame[1] = playeringame[2] = playeringame[3] = 0;
-	// [crispy] leave game parameters intact when continuing a demo
-	if (!demorecording)
-	{
-	respawnparm = false;
-	fastparm = false;
-	nomonsters = false;
-	}
-	consoleplayer = 0;
+        demoplayback = false;
+        netdemo = false;
+        netgame = false;
+        deathmatch = false;
+        playeringame[1] = playeringame[2] = playeringame[3] = 0;
+        // [crispy] leave game parameters intact when continuing a demo
+        if (!demorecording)
+        {
+            respawnparm = false;
+            fastparm = false;
+            nomonsters = false;
+        }
+        consoleplayer = 0;
 
         // [crispy] in demo continue mode increase the demo buffer and
         // continue recording once we are done with playback
@@ -3659,33 +3623,33 @@ boolean G_CheckDemoStatus (void)
         }
 
         if (singledemo)
-            I_Quit ();
+            I_Quit();
         else
-            D_AdvanceDemo ();
+            D_AdvanceDemo();
 
-	return true;
+        return true;
     }
 
     if (demorecording)
     {
-	boolean success;
-	char *msg;
+        boolean success;
+        char *msg;
 
-	*demo_p++ = DEMOMARKER;
-	G_AddDemoFooter();
-	success = M_WriteFile (demoname, demobuffer, demo_p - demobuffer);
-	msg = success ? "Demo %s recorded%c" : "Failed to record Demo %s%c";
-	Z_Free (demobuffer);
-	demorecording = false;
-	// [crispy] if a new game is started during demo recording, start a new demo
-	if (gameaction != ga_newgame)
-	{
-	    I_Error (msg, demoname, '\0');
-	}
-	else
-	{
-	    fprintf(stderr, msg, demoname, '\n');
-	}
+        *demo_p++ = DEMOMARKER;
+        G_AddDemoFooter();
+        success = M_WriteFile(demoname, demobuffer, demo_p - demobuffer);
+        msg = success ? "Demo %s recorded%c" : "Failed to record Demo %s%c";
+        Z_Free(demobuffer);
+        demorecording = false;
+        // [crispy] if a new game is started during demo recording, start a new demo
+        if (gameaction != ga_newgame)
+        {
+            I_Error(msg, demoname, '\0');
+        }
+        else
+        {
+            fprintf(stderr, msg, demoname, '\n');
+        }
     }
 
     return false;
@@ -3698,7 +3662,7 @@ boolean G_CheckDemoStatus (void)
 
 boolean demo_gotonextlvl;
 
-void G_DemoGotoNextLevel (boolean start)
+void G_DemoGotoNextLevel(boolean start)
 {
     // disable screen rendering while fast forwarding
     nodrawers = start;
@@ -3709,5 +3673,3 @@ void G_DemoGotoNextLevel (boolean start)
         singletics = start;
     }
 }
-
-

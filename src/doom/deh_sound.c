@@ -25,15 +25,15 @@
 #include "sounds.h"
 
 DEH_BEGIN_MAPPING(sound_mapping, sfxinfo_t)
-    DEH_UNSUPPORTED_MAPPING("Offset")
-    DEH_UNSUPPORTED_MAPPING("Zero/One")
-    DEH_MAPPING("Value", priority)
-    DEH_MAPPING("Zero 1", link)
-    DEH_MAPPING("Zero 2", pitch)
-    DEH_MAPPING("Zero 3", volume)
-    DEH_UNSUPPORTED_MAPPING("Zero 4")
-    DEH_MAPPING("Neg. One 1", usefulness)
-    DEH_MAPPING("Neg. One 2", lumpnum)
+DEH_UNSUPPORTED_MAPPING("Offset")
+DEH_UNSUPPORTED_MAPPING("Zero/One")
+DEH_MAPPING("Value", priority)
+DEH_MAPPING("Zero 1", link)
+DEH_MAPPING("Zero 2", pitch)
+DEH_MAPPING("Zero 3", volume)
+DEH_UNSUPPORTED_MAPPING("Zero 4")
+DEH_MAPPING("Neg. One 1", usefulness)
+DEH_MAPPING("Neg. One 2", lumpnum)
 DEH_END_MAPPING
 
 static void *DEH_SoundStart(deh_context_t *context, char *line)
@@ -54,8 +54,10 @@ static void *DEH_SoundStart(deh_context_t *context, char *line)
 
     if (sound_number >= DEH_VANILLA_NUMSFX)
     {
-        DEH_Warning(context, "Attempt to modify SFX %i.  This will cause "
-                             "problems in Vanilla dehacked.", sound_number);
+        DEH_Warning(context,
+                    "Attempt to modify SFX %i.  This will cause "
+                    "problems in Vanilla dehacked.",
+                    sound_number);
     }
 
     return &S_sfx[sound_number];
@@ -68,7 +70,7 @@ static void DEH_SoundParseLine(deh_context_t *context, char *line, void *tag)
     int ivalue;
 
     if (tag == NULL)
-       return;
+        return;
 
     sfx = (sfxinfo_t *) tag;
 
@@ -90,13 +92,6 @@ static void DEH_SoundParseLine(deh_context_t *context, char *line, void *tag)
     DEH_SetMapping(context, &sound_mapping, sfx, variable_name, ivalue);
 }
 
-deh_section_t deh_section_sound =
-{
-    "Sound",
-    NULL,
-    DEH_SoundStart,
-    DEH_SoundParseLine,
-    NULL,
-    NULL,
+deh_section_t deh_section_sound = {
+    "Sound", NULL, DEH_SoundStart, DEH_SoundParseLine, NULL, NULL,
 };
-

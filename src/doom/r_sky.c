@@ -21,7 +21,6 @@
 //
 
 
-
 // Needed for FRACUNIT.
 #include "m_fixed.h"
 
@@ -34,17 +33,16 @@
 //
 // sky mapping
 //
-int			skyflatnum;
-int			skytexture = -1; // [crispy] initialize
-int			skytexturemid;
-
+int skyflatnum;
+int skytexture = -1; // [crispy] initialize
+int skytexturemid;
 
 
 //
 // R_InitSkyMap
 // Called whenever the view size changes.
 //
-void R_InitSkyMap (void)
+void R_InitSkyMap(void)
 {
     int skyheight;
 
@@ -58,10 +56,9 @@ void R_InitSkyMap (void)
     skyheight = textureheight[skytexture] >> FRACBITS;
 
     if (crispy->stretchsky && skyheight < 200)
-        skytexturemid = -28*FRACUNIT;
+        skytexturemid = -28 * FRACUNIT;
     else if (skyheight >= 200)
-        skytexturemid = 200*FRACUNIT;
+        skytexturemid = 200 * FRACUNIT;
     else
-    skytexturemid = ORIGHEIGHT/2*FRACUNIT;
+        skytexturemid = ORIGHEIGHT / 2 * FRACUNIT;
 }
-

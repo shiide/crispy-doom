@@ -27,7 +27,8 @@
 #include "info.h"
 #include "p_mobj.h" // [crispy] MF_*
 
-typedef struct {
+typedef struct
+{
     const char *flag;
     int bits;
 } bex_thingbits_t;
@@ -74,97 +75,94 @@ static const bex_thingbits_t bex_thingbitstable[] = {
 };
 
 DEH_BEGIN_MAPPING(thing_mapping, mobjinfo_t)
-  DEH_MAPPING("ID #",                doomednum)
-  DEH_MAPPING("Initial frame",       spawnstate)
-  DEH_MAPPING("Hit points",          spawnhealth)
-  DEH_MAPPING("First moving frame",  seestate)
-  DEH_MAPPING("Alert sound",         seesound)
-  DEH_MAPPING("Reaction time",       reactiontime)
-  DEH_MAPPING("Attack sound",        attacksound)
-  DEH_MAPPING("Injury frame",        painstate)
-  DEH_MAPPING("Pain chance",         painchance)
-  DEH_MAPPING("Pain sound",          painsound)
-  DEH_MAPPING("Close attack frame",  meleestate)
-  DEH_MAPPING("Far attack frame",    missilestate)
-  DEH_MAPPING("Death frame",         deathstate)
-  DEH_MAPPING("Exploding frame",     xdeathstate)
-  DEH_MAPPING("Death sound",         deathsound)
-  DEH_MAPPING("Speed",               speed)
-  DEH_MAPPING("Width",               radius)
-  DEH_MAPPING("Height",              height)
-  DEH_MAPPING("Mass",                mass)
-  DEH_MAPPING("Missile damage",      damage)
-  DEH_MAPPING("Action sound",        activesound)
-  DEH_MAPPING("Bits",                flags)
-  DEH_MAPPING("Respawn frame",       raisestate)
-  // [JN] Gib health feature from DOOM Retro.
-  DEH_MAPPING("Gib health",          gibhealth)
-  // [crispy] Thing id to drop after death
-  DEH_MAPPING("Dropped item",        droppeditem)
-  // [crispy] Distance to switch from missile to melee attack
-  DEH_MAPPING("Melee threshold",     meleethreshold)
-  // [crispy] Maximum distance range to start shooting (zero for unlimited)
-  DEH_MAPPING("Max target range",    maxattackrange)
-  // [crispy] Minimum chance for firing a missile
-  DEH_MAPPING("Min missile chance",  minmissilechance)
-  // [crispy] Multiplies the chance of firing a missile (65536 = normal chance)
-  DEH_MAPPING("Missile chance multiplier",  missilechancemult)
+DEH_MAPPING("ID #", doomednum)
+DEH_MAPPING("Initial frame", spawnstate)
+DEH_MAPPING("Hit points", spawnhealth)
+DEH_MAPPING("First moving frame", seestate)
+DEH_MAPPING("Alert sound", seesound)
+DEH_MAPPING("Reaction time", reactiontime)
+DEH_MAPPING("Attack sound", attacksound)
+DEH_MAPPING("Injury frame", painstate)
+DEH_MAPPING("Pain chance", painchance)
+DEH_MAPPING("Pain sound", painsound)
+DEH_MAPPING("Close attack frame", meleestate)
+DEH_MAPPING("Far attack frame", missilestate)
+DEH_MAPPING("Death frame", deathstate)
+DEH_MAPPING("Exploding frame", xdeathstate)
+DEH_MAPPING("Death sound", deathsound)
+DEH_MAPPING("Speed", speed)
+DEH_MAPPING("Width", radius)
+DEH_MAPPING("Height", height)
+DEH_MAPPING("Mass", mass)
+DEH_MAPPING("Missile damage", damage)
+DEH_MAPPING("Action sound", activesound)
+DEH_MAPPING("Bits", flags)
+DEH_MAPPING("Respawn frame", raisestate)
+// [JN] Gib health feature from DOOM Retro.
+DEH_MAPPING("Gib health", gibhealth)
+// [crispy] Thing id to drop after death
+DEH_MAPPING("Dropped item", droppeditem)
+// [crispy] Distance to switch from missile to melee attack
+DEH_MAPPING("Melee threshold", meleethreshold)
+// [crispy] Maximum distance range to start shooting (zero for unlimited)
+DEH_MAPPING("Max target range", maxattackrange)
+// [crispy] Minimum chance for firing a missile
+DEH_MAPPING("Min missile chance", minmissilechance)
+// [crispy] Multiplies the chance of firing a missile (65536 = normal chance)
+DEH_MAPPING("Missile chance multiplier", missilechancemult)
 DEH_END_MAPPING
 
 // [crispy] initialize Thing extra properties (keeping vanilla props in info.c)
-static void DEH_InitThingProperties (void)
+static void DEH_InitThingProperties(void)
 {
-	int i;
+    int i;
 
-	for (i = 0; i < NUMMOBJTYPES; i++)
-	{
-		// [crispy] mobj id for item dropped on death
-		switch (i)
-		{
-			case MT_WOLFSS:
-			case MT_POSSESSED:
-			mobjinfo[i].droppeditem = MT_CLIP;
-			break;
+    for (i = 0; i < NUMMOBJTYPES; i++)
+    {
+        // [crispy] mobj id for item dropped on death
+        switch (i)
+        {
+            case MT_WOLFSS:
+            case MT_POSSESSED:
+                mobjinfo[i].droppeditem = MT_CLIP;
+                break;
 
-			case MT_SHOTGUY:
-			mobjinfo[i].droppeditem = MT_SHOTGUN;
-			break;
+            case MT_SHOTGUY:
+                mobjinfo[i].droppeditem = MT_SHOTGUN;
+                break;
 
-			case MT_CHAINGUY:
-			mobjinfo[i].droppeditem = MT_CHAINGUN;
-			break;
+            case MT_CHAINGUY:
+                mobjinfo[i].droppeditem = MT_CHAINGUN;
+                break;
 
-			default:
-			mobjinfo[i].droppeditem = MT_NULL;
-		}
+            default:
+                mobjinfo[i].droppeditem = MT_NULL;
+        }
 
-		// [crispy] distance to switch from missile to melee attack (generaliz. for Revenant)
-		if (i == MT_UNDEAD)
-			mobjinfo[i].meleethreshold = 196;
-		else
-			mobjinfo[i].meleethreshold = 0;
+        // [crispy] distance to switch from missile to melee attack (generaliz. for Revenant)
+        if (i == MT_UNDEAD)
+            mobjinfo[i].meleethreshold = 196;
+        else
+            mobjinfo[i].meleethreshold = 0;
 
-		// [crispy] maximum distance range to start shooting (generaliz. for Arch Vile)
-		if (i == MT_VILE)
-			mobjinfo[i].maxattackrange = 14*64;
-		else
-			mobjinfo[i].maxattackrange = 0; // unlimited
+        // [crispy] maximum distance range to start shooting (generaliz. for Arch Vile)
+        if (i == MT_VILE)
+            mobjinfo[i].maxattackrange = 14 * 64;
+        else
+            mobjinfo[i].maxattackrange = 0; // unlimited
 
-		// [crispy] minimum likelihood of a missile attack (generaliz. for Cyberdemon)
-		if (i == MT_CYBORG)
-			mobjinfo[i].minmissilechance = 160;
-		else
-			mobjinfo[i].minmissilechance = 200;
+        // [crispy] minimum likelihood of a missile attack (generaliz. for Cyberdemon)
+        if (i == MT_CYBORG)
+            mobjinfo[i].minmissilechance = 160;
+        else
+            mobjinfo[i].minmissilechance = 200;
 
-		// [crispy] multiplier for missile firing chance (generaliz. from vanilla)
-		if (i == MT_CYBORG
-		   || i == MT_SPIDER
-		   || i == MT_UNDEAD
-		   || i == MT_SKULL)
-			mobjinfo[i].missilechancemult = FRACUNIT/2;
-		else
-			mobjinfo[i].missilechancemult = FRACUNIT;
-	}
+        // [crispy] multiplier for missile firing chance (generaliz. from vanilla)
+        if (i == MT_CYBORG || i == MT_SPIDER || i == MT_UNDEAD || i == MT_SKULL)
+            mobjinfo[i].missilechancemult = FRACUNIT / 2;
+        else
+            mobjinfo[i].missilechancemult = FRACUNIT;
+    }
 }
 
 static void *DEH_ThingStart(deh_context_t *context, char *line)
@@ -199,7 +197,7 @@ static void DEH_ThingParseLine(deh_context_t *context, char *line, void *tag)
     int ivalue;
 
     if (tag == NULL)
-       return;
+        return;
 
     mobj = (mobjinfo_t *) tag;
 
@@ -213,7 +211,7 @@ static void DEH_ThingParseLine(deh_context_t *context, char *line, void *tag)
         return;
     }
 
-//    printf("Set %s to %s for mobj\n", variable_name, value);
+    //    printf("Set %s to %s for mobj\n", variable_name, value);
 
     // all values are integers
 
@@ -224,7 +222,7 @@ static void DEH_ThingParseLine(deh_context_t *context, char *line, void *tag)
     {
         if (!ivalue)
         {
-            for ( ; (value = strtok(value, ",+| \t\f\r")); value = NULL)
+            for (; (value = strtok(value, ",+| \t\f\r")); value = NULL)
             {
                 int i;
                 for (i = 0; i < arrlen(bex_thingbitstable); i++)
@@ -240,8 +238,9 @@ static void DEH_ThingParseLine(deh_context_t *context, char *line, void *tag)
 
         if ((ivalue & (MF_NOBLOCKMAP | MF_MISSILE)) == MF_MISSILE)
         {
-            DEH_Warning(context, "Thing %ld has MF_MISSILE without MF_NOBLOCKMAP",
-                                 (long)(mobj - mobjinfo) + 1);
+            DEH_Warning(context,
+                        "Thing %ld has MF_MISSILE without MF_NOBLOCKMAP",
+                        (long) (mobj - mobjinfo) + 1);
         }
     }
 
@@ -260,14 +259,13 @@ static void DEH_ThingSHA1Sum(sha1_context_t *context)
 {
     int i;
 
-    for (i=0; i<NUMMOBJTYPES; ++i)
+    for (i = 0; i < NUMMOBJTYPES; ++i)
     {
         DEH_StructSHA1Sum(context, &thing_mapping, &mobjinfo[i]);
     }
 }
 
-deh_section_t deh_section_thing =
-{
+deh_section_t deh_section_thing = {
     "Thing",
     DEH_InitThingProperties, // [crispy] initialize Thing extra properties
     DEH_ThingStart,
@@ -275,4 +273,3 @@ deh_section_t deh_section_thing =
     NULL,
     DEH_ThingSHA1Sum,
 };
-
