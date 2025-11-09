@@ -136,7 +136,7 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 
 // HEALTH number pos.
 #define ST_HEALTHWIDTH 3
-#define ST_HEALTHX     16
+#define ST_HEALTHX     14
 #define ST_HEALTHY     ST_NUMBERS_Y
 
 // Weapon pos.
@@ -153,9 +153,11 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 #define ST_FRAGSWIDTH 2
 
 // ARMOR number pos.
-#define ST_ARMORWIDTH 3
-#define ST_ARMORX     66
-#define ST_ARMORY     ST_NUMBERS_Y
+#define ST_ARMORWIDTH   3
+#define ST_ARMORX       90
+#define ST_ARMORY       ST_NUMBERS_Y
+#define ST_ARMOR_ICON_X (ST_ARMORX - 50)
+#define ST_ARMOR_ICON_Y (ST_ARMORY + 20)
 
 // Key icon positions.
 #define ST_KEY0WIDTH  8
@@ -293,6 +295,9 @@ static st_multicon_t w_faces;
 // keycard widgets
 static st_multicon_t w_keyboxes[3];
 
+// armor icon
+static patch_t *armor_patch;
+
 // armor widget
 static st_number_t w_armor;
 
@@ -388,7 +393,6 @@ void ST_Stop(void);
 
 void ST_refreshBackground(boolean force)
 {
-
     if (st_classicstatusbar || force)
     {
         V_UseBuffer(st_backing_screen);
@@ -1894,6 +1898,8 @@ void ST_drawWidgets(boolean refresh)
         w_health.num = crispy->neghealth ? &plyr->neghealth : &plyr->health;
         STlib_updateNum(&w_health, refresh);
     }
+    dp_translation = NULL;
+    V_DrawPatch(ST_ARMOR_ICON_X, ST_ARMOR_ICON_Y, armor_patch);
     dp_translation = ST_WidgetColor(hudcolor_armor);
     STlib_updateNum(&w_armor, refresh);
     dp_translation = NULL;
@@ -2040,6 +2046,9 @@ static void ST_loadUnloadGraphics(load_callback_t callback)
         DEH_snprintf(namebuf, 9, "STFB%d", i);
         callback(namebuf, &faceback[i]);
     }
+
+    // armor icon
+    callback(DEH_String("arm1b0"), &armor_patch);
 
     // status bar background bits
     if (W_CheckNumForName("STBAR") >= 0)
