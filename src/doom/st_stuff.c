@@ -1899,25 +1899,25 @@ void ST_drawWidgets(boolean refresh)
     STlib_updatePercent(&w_armor, refresh);
     dp_translation = NULL;
 
-    STlib_updateBinIcon(&w_armsbg, refresh);
+    // STlib_updateBinIcon(&w_armsbg, refresh);
 
     // [crispy] show SSG availability in the Shotgun slot of the arms widget
     st_shotguns =
         plyr->weaponowned[wp_shotgun] | plyr->weaponowned[wp_supershotgun];
 
-    for (i = 0; i < 6; i++)
-        STlib_updateMultIcon(&w_arms[i], refresh);
+    // for (i = 0; i < 6; i++)
+    //     STlib_updateMultIcon(&w_arms[i], refresh);
 
     // [crispy] draw the actual face widget background
-    if (st_crispyhud && (screenblocks % 3 == 0))
-    {
-        if (netgame)
-            V_DrawPatch(ST_FX, ST_Y + 1, faceback[displayplayer]);
-        else
-            V_CopyRect(ST_FX + WIDESCREENDELTA, 1, st_backing_screen,
-                       SHORT(faceback[0]->width), ST_HEIGHT - 1,
-                       ST_FX + WIDESCREENDELTA, ST_Y + 1);
-    }
+    // if (st_crispyhud && (screenblocks % 3 == 0))
+    // {
+    //     if (netgame)
+    //         V_DrawPatch(ST_FX, ST_Y + 1, faceback[displayplayer]);
+    //     else
+    //         V_CopyRect(ST_FX + WIDESCREENDELTA, 1, st_backing_screen,
+    //                    SHORT(faceback[0]->width), ST_HEIGHT - 1,
+    //                    ST_FX + WIDESCREENDELTA, ST_Y + 1);
+    // }
 
     STlib_updateMultIcon(&w_faces, refresh);
 
