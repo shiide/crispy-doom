@@ -37,7 +37,7 @@ boolean W_ParseCommandLine(void)
     boolean modifiedgame = false;
     int p;
 
-    // Merged PWADs are loaded first, because they are supposed to be 
+    // Merged PWADs are loaded first, because they are supposed to be
     // modified IWADs.
 
     //!
@@ -94,7 +94,7 @@ boolean W_ParseCommandLine(void)
             free(filename);
         }
     }
-    
+
     // Add flats
 
     //!

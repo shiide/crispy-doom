@@ -555,7 +555,7 @@ void I_ReadMouse(void)
     SDL_GetRelativeMouseState(&x, &y);
     UpdateMouseAccel(x, y); // [crispy]
 
-    if (x != 0 || y != 0) 
+    if (x != 0 || y != 0)
     {
         ev.type = ev_mouse;
         ev.data1 = mouse_button_state;

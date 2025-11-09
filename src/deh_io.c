@@ -358,7 +358,7 @@ char *DEH_ReadLine(deh_context_t *context, boolean extended)
             ++pos;
         }
     }
-    
+
     return context->readbuffer;
 }
 

@@ -110,7 +110,7 @@ static boolean CachePCSLump(sfxinfo_t *sfxinfo)
     int headerlen;
 
     // Free the current sound lump back to the cache
- 
+
     if (current_sound_lump != NULL)
     {
         W_ReleaseLumpNum(current_sound_lump_num);
@@ -123,7 +123,7 @@ static boolean CachePCSLump(sfxinfo_t *sfxinfo)
     lumplen = W_LumpLength(sfxinfo->lumpnum);
 
     // Read header
-  
+
     if (current_sound_lump[0] != 0x00 || current_sound_lump[1] != 0x00)
     {
         return false;
@@ -145,7 +145,7 @@ static boolean CachePCSLump(sfxinfo_t *sfxinfo)
     return true;
 }
 
-// These Doom PC speaker sounds are not played - this can be seen in the 
+// These Doom PC speaker sounds are not played - this can be seen in the
 // Heretic source code, where there are remnants of this left over
 // from Doom.
 
@@ -239,7 +239,7 @@ static void I_PCS_StopSound(int handle)
     {
         current_sound_remaining = 0;
     }
-    
+
     SDL_UnlockMutex(sound_lock);
 }
 

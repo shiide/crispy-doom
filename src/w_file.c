@@ -26,7 +26,7 @@
 #include "w_file.h"
 
 
-static wad_file_class_t *wad_file_classes[] = 
+static wad_file_class_t *wad_file_classes[] =
 {
 #ifdef _WIN32
     &win32_wad_file,

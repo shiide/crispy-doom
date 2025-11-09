@@ -529,7 +529,7 @@ static boolean ExpandSoundData_SRC(sfxinfo_t *sfxinfo,
 
     if (clipped > 0)
     {
-        fprintf(stderr, "Sound '%s': clipped %u samples (%0.2f %%)\n", 
+        fprintf(stderr, "Sound '%s': clipped %u samples (%0.2f %%)\n",
                         sfxinfo->name, clipped,
                         400.0 * clipped / chunk->alen);
     }
@@ -858,7 +858,7 @@ static boolean CacheSFX(sfxinfo_t *sfxinfo)
 #endif
 
     // don't need the original lump any more
-  
+
     W_ReleaseLumpNum(lumpnum);
 
     return true;

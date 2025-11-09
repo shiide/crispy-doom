@@ -90,7 +90,7 @@ void V_FillFlat(int y_start, int y_stop, int x_start, int x_stop,
 
 void V_RestoreBuffer(void);
 
-// Save a screenshot of the current screen to a file, named in the 
+// Save a screenshot of the current screen to a file, named in the
 // format described in the string passed to the function, eg.
 // "DOOM%02i.pcx"
 
