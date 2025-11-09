@@ -441,7 +441,7 @@ void S_Start(void)
             if (W_CheckNumForName(name) == -1)
             {
                 mnum = mlvlkmus[gamemap - 1][1];
-            }            
+            }
         }
         else
         mnum = mus_runnin + gamemap - 1;
