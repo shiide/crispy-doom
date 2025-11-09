@@ -44,4 +44,3 @@ void D_DoomMain(void)
 
     NET_DedicatedServer();
 }
-

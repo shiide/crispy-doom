@@ -84,20 +84,13 @@ static void DEH_AmmoSHA1Hash(sha1_context_t *context)
 {
     int i;
 
-    for (i=0; i<NUMAMMO; ++i)
+    for (i = 0; i < NUMAMMO; ++i)
     {
         SHA1_UpdateInt32(context, clipammo[i]);
         SHA1_UpdateInt32(context, maxammo[i]);
     }
 }
 
-deh_section_t deh_section_ammo =
-{
-    "Ammo",
-    NULL,
-    DEH_AmmoStart,
-    DEH_AmmoParseLine,
-    NULL,
-    DEH_AmmoSHA1Hash,
+deh_section_t deh_section_ammo = {
+    "Ammo", NULL, DEH_AmmoStart, DEH_AmmoParseLine, NULL, DEH_AmmoSHA1Hash,
 };
-

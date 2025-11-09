@@ -35,14 +35,12 @@
 #pragma pack(push, 1)
 #endif
 
-typedef PACKED_STRUCT (
-{
+typedef PACKED_STRUCT({
     byte chunk_id[4];
     unsigned int chunk_size;
 }) chunk_header_t;
 
-typedef PACKED_STRUCT (
-{
+typedef PACKED_STRUCT({
     chunk_header_t chunk_header;
     unsigned short format_type;
     unsigned short num_tracks;
@@ -88,8 +86,7 @@ struct midi_file_s
 
 // Check the header of a chunk:
 
-static boolean CheckChunkHeader(chunk_header_t *chunk,
-                                const char *expected_id)
+static boolean CheckChunkHeader(chunk_header_t *chunk, const char *expected_id)
 {
     boolean result;
 
@@ -97,11 +94,11 @@ static boolean CheckChunkHeader(chunk_header_t *chunk,
 
     if (!result)
     {
-        fprintf(stderr, "CheckChunkHeader: Expected '%s' chunk header, "
-                        "got '%c%c%c%c'\n",
-                        expected_id,
-                        chunk->chunk_id[0], chunk->chunk_id[1],
-                        chunk->chunk_id[2], chunk->chunk_id[3]);
+        fprintf(stderr,
+                "CheckChunkHeader: Expected '%s' chunk header, "
+                "got '%c%c%c%c'\n",
+                expected_id, chunk->chunk_id[0], chunk->chunk_id[1],
+                chunk->chunk_id[2], chunk->chunk_id[3]);
     }
 
     return result;
@@ -137,7 +134,7 @@ static boolean ReadVariableLength(unsigned int *result, FILE *stream)
 
     *result = 0;
 
-    for (i=0; i<4; ++i)
+    for (i = 0; i < 4; ++i)
     {
         if (!ReadByte(&b, stream))
         {
@@ -184,12 +181,12 @@ static void *ReadByteSequence(unsigned int num_bytes, FILE *stream)
 
     // Read the data:
 
-    for (i=0; i<num_bytes; ++i)
+    for (i = 0; i < num_bytes; ++i)
     {
         if (!ReadByte(&result[i], stream))
         {
             fprintf(stderr, "ReadByteSequence: Error while reading byte %u\n",
-                            i);
+                    i);
             free(result);
             return NULL;
         }
@@ -202,9 +199,8 @@ static void *ReadByteSequence(unsigned int num_bytes, FILE *stream)
 // two_param indicates that the event type takes two parameters
 // (three byte) otherwise it is single parameter (two byte)
 
-static boolean ReadChannelEvent(midi_event_t *event,
-                                byte event_type, boolean two_param,
-                                FILE *stream)
+static boolean ReadChannelEvent(midi_event_t *event, byte event_type,
+                                boolean two_param, FILE *stream)
 {
     byte b = 0;
 
@@ -243,15 +239,14 @@ static boolean ReadChannelEvent(midi_event_t *event,
 
 // Read sysex event:
 
-static boolean ReadSysExEvent(midi_event_t *event, int event_type,
-                              FILE *stream)
+static boolean ReadSysExEvent(midi_event_t *event, int event_type, FILE *stream)
 {
     event->event_type = event_type;
 
     if (!ReadVariableLength(&event->data.sysex.length, stream))
     {
         fprintf(stderr, "ReadSysExEvent: Failed to read length of "
-                                        "SysEx block\n");
+                        "SysEx block\n");
         return false;
     }
 
@@ -291,7 +286,7 @@ static boolean ReadMetaEvent(midi_event_t *event, FILE *stream)
     if (!ReadVariableLength(&event->data.meta.length, stream))
     {
         fprintf(stderr, "ReadSysExEvent: Failed to read length of "
-                                        "SysEx block\n");
+                        "SysEx block\n");
         return false;
     }
 
@@ -349,7 +344,7 @@ static boolean ReadEvent(midi_event_t *event, unsigned int *last_event_type,
 
     switch (event_type & 0xf0)
     {
-        // Two parameter channel events:
+            // Two parameter channel events:
 
         case MIDI_EVENT_NOTE_OFF:
         case MIDI_EVENT_NOTE_ON:
@@ -358,7 +353,7 @@ static boolean ReadEvent(midi_event_t *event, unsigned int *last_event_type,
         case MIDI_EVENT_PITCH_BEND:
             return ReadChannelEvent(event, event_type, true, stream);
 
-        // Single parameter channel events:
+            // Single parameter channel events:
 
         case MIDI_EVENT_PROGRAM_CHANGE:
         case MIDI_EVENT_CHAN_AFTERTOUCH:
@@ -460,7 +455,7 @@ static boolean ReadTrack(midi_track_t *track, FILE *stream)
         // Resize the track slightly larger to hold another event:
 
         new_events = I_Realloc(track->events,
-                             sizeof(midi_event_t) * (track->num_events + 1));
+                               sizeof(midi_event_t) * (track->num_events + 1));
         track->events = new_events;
 
         // Read the next event:
@@ -475,8 +470,8 @@ static boolean ReadTrack(midi_track_t *track, FILE *stream)
 
         // End of track?
 
-        if (event->event_type == MIDI_EVENT_META
-         && event->data.meta.type == MIDI_META_END_OF_TRACK)
+        if (event->event_type == MIDI_EVENT_META &&
+            event->data.meta.type == MIDI_META_END_OF_TRACK)
         {
             break;
         }
@@ -491,7 +486,7 @@ static void FreeTrack(midi_track_t *track)
 {
     unsigned int i;
 
-    for (i=0; i<track->num_events; ++i)
+    for (i = 0; i < track->num_events; ++i)
     {
         FreeEvent(&track->events[i]);
     }
@@ -516,7 +511,7 @@ static boolean ReadAllTracks(midi_file_t *file, FILE *stream)
 
     // Read each track:
 
-    for (i=0; i<file->num_tracks; ++i)
+    for (i = 0; i < file->num_tracks; ++i)
     {
         if (!ReadTrack(&file->tracks[i], stream))
         {
@@ -541,23 +536,23 @@ static boolean ReadFileHeader(midi_file_t *file, FILE *stream)
         return false;
     }
 
-    if (!CheckChunkHeader(&file->header.chunk_header, HEADER_CHUNK_ID)
-     || SDL_SwapBE32(file->header.chunk_header.chunk_size) != 6)
+    if (!CheckChunkHeader(&file->header.chunk_header, HEADER_CHUNK_ID) ||
+        SDL_SwapBE32(file->header.chunk_header.chunk_size) != 6)
     {
-        fprintf(stderr, "ReadFileHeader: Invalid MIDI chunk header! "
-                        "chunk_size=%i\n",
-                        SDL_SwapBE32(file->header.chunk_header.chunk_size));
+        fprintf(stderr,
+                "ReadFileHeader: Invalid MIDI chunk header! "
+                "chunk_size=%i\n",
+                SDL_SwapBE32(file->header.chunk_header.chunk_size));
         return false;
     }
 
     format_type = SDL_SwapBE16(file->header.format_type);
     file->num_tracks = SDL_SwapBE16(file->header.num_tracks);
 
-    if ((format_type != 0 && format_type != 1)
-     || file->num_tracks < 1)
+    if ((format_type != 0 && format_type != 1) || file->num_tracks < 1)
     {
         fprintf(stderr, "ReadFileHeader: Only type 0/1 "
-                                         "MIDI files supported!\n");
+                        "MIDI files supported!\n");
         return false;
     }
 
@@ -570,7 +565,7 @@ void MIDI_FreeFile(midi_file_t *file)
 
     if (file->tracks != NULL)
     {
-        for (i=0; i<file->num_tracks; ++i)
+        for (i = 0; i < file->num_tracks; ++i)
         {
             FreeTrack(&file->tracks[i]);
         }
@@ -703,8 +698,7 @@ unsigned int MIDI_GetFileTimeDivision(midi_file_t *file)
     // differently.
     if (result < 0)
     {
-        return (signed int)(-(result/256))
-             * (signed int)(result & 0xFF);
+        return (signed int) (-(result / 256)) * (signed int) (result & 0xFF);
     }
     else
     {
@@ -765,7 +759,7 @@ void PrintTrack(midi_track_t *track)
     midi_event_t *event;
     unsigned int i;
 
-    for (i=0; i<track->num_events; ++i)
+    for (i = 0; i < track->num_events; ++i)
     {
         event = &track->events[i];
 
@@ -775,10 +769,9 @@ void PrintTrack(midi_track_t *track)
         }
 
         printf("Event type: %s (%i)\n",
-               MIDI_EventTypeToString(event->event_type),
-               event->event_type);
+               MIDI_EventTypeToString(event->event_type), event->event_type);
 
-        switch(event->event_type)
+        switch (event->event_type)
         {
             case MIDI_EVENT_NOTE_OFF:
             case MIDI_EVENT_NOTE_ON:
@@ -824,7 +817,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    for (i=0; i<file->num_tracks; ++i)
+    for (i = 0; i < file->num_tracks; ++i)
     {
         printf("\n== Track %u ==\n\n", i);
 
@@ -835,4 +828,3 @@ int main(int argc, char *argv[])
 }
 
 #endif
-

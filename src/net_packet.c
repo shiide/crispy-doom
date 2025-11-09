@@ -122,7 +122,7 @@ boolean NET_ReadInt32(net_packet_t *packet, unsigned int *data)
 
 boolean NET_ReadSInt8(net_packet_t *packet, signed int *data)
 {
-    if (NET_ReadInt8(packet,(unsigned int *) data))
+    if (NET_ReadInt8(packet, (unsigned int *) data))
     {
         if (*data & (1 << 7))
         {
@@ -322,7 +322,3 @@ void NET_WriteString(net_packet_t *packet, const char *string)
 
     packet->len += string_size;
 }
-
-
-
-

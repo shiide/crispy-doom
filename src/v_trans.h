@@ -61,6 +61,6 @@ extern byte *tranmap;
 #endif
 
 int V_GetPaletteIndex(byte *palette, int r, int g, int b);
-byte V_Colorize (byte *playpal, int cr, byte source, boolean keepgray109);
+byte V_Colorize(byte *playpal, int cr, byte source, boolean keepgray109);
 
 #endif // __V_TRANS__

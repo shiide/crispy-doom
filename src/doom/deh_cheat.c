@@ -32,32 +32,31 @@ typedef struct
     cheatseq_t *seq;
 } deh_cheat_t;
 
-static deh_cheat_t allcheats[] =
-{
-    {"Change music",        &cheat_mus },
-    {"Chainsaw",            &cheat_choppers },
-    {"God mode",            &cheat_god },
-    {"Ammo & Keys",         &cheat_ammo },
-    {"Ammo",                &cheat_ammonokey },
-    {"No Clipping 1",       &cheat_noclip },
-    {"No Clipping 2",       &cheat_commercial_noclip },
-    {"Invincibility",       &cheat_powerup[0] },
-    {"Berserk",             &cheat_powerup[1] },
-    {"Invisibility",        &cheat_powerup[2] },
-    {"Radiation Suit",      &cheat_powerup[3] },
-    {"Auto-map",            &cheat_powerup[4] },
-    {"Lite-Amp Goggles",    &cheat_powerup[5] },
-    {"BEHOLD menu",         &cheat_powerup[6] },
-    {"Level Warp",          &cheat_clev },
-    {"Player Position",     &cheat_mypos },
-    {"Map cheat",           &cheat_amap },
+static deh_cheat_t allcheats[] = {
+    {"Change music", &cheat_mus},
+    {"Chainsaw", &cheat_choppers},
+    {"God mode", &cheat_god},
+    {"Ammo & Keys", &cheat_ammo},
+    {"Ammo", &cheat_ammonokey},
+    {"No Clipping 1", &cheat_noclip},
+    {"No Clipping 2", &cheat_commercial_noclip},
+    {"Invincibility", &cheat_powerup[0]},
+    {"Berserk", &cheat_powerup[1]},
+    {"Invisibility", &cheat_powerup[2]},
+    {"Radiation Suit", &cheat_powerup[3]},
+    {"Auto-map", &cheat_powerup[4]},
+    {"Lite-Amp Goggles", &cheat_powerup[5]},
+    {"BEHOLD menu", &cheat_powerup[6]},
+    {"Level Warp", &cheat_clev},
+    {"Player Position", &cheat_mypos},
+    {"Map cheat", &cheat_amap},
 };
 
 static deh_cheat_t *FindCheatByName(char *name)
 {
     size_t i;
 
-    for (i=0; i<arrlen(allcheats); ++i)
+    for (i = 0; i < arrlen(allcheats); ++i)
     {
         if (!strcasecmp(allcheats[i].name, name))
             return &allcheats[i];
@@ -113,10 +112,10 @@ static void DEH_CheatParseLine(deh_context_t *context, char *line, void *tag)
             break;
         }
 
-	if (deh_apply_cheats)
-	{
-	    cheat->seq->sequence[i] = unsvalue[i];
-	}
+        if (deh_apply_cheats)
+        {
+            cheat->seq->sequence[i] = unsvalue[i];
+        }
         ++i;
 
         // Absolute limit - don't exceed
@@ -134,13 +133,6 @@ static void DEH_CheatParseLine(deh_context_t *context, char *line, void *tag)
     }
 }
 
-deh_section_t deh_section_cheat =
-{
-    "Cheat",
-    NULL,
-    DEH_CheatStart,
-    DEH_CheatParseLine,
-    NULL,
-    NULL,
+deh_section_t deh_section_cheat = {
+    "Cheat", NULL, DEH_CheatStart, DEH_CheatParseLine, NULL, NULL,
 };
-

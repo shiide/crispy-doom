@@ -248,35 +248,33 @@ static void IncreaseReadBuffer(deh_context_t *context)
 }
 
 // [crispy] Save pointer to start of current line ...
-void DEH_SaveLineStart (deh_context_t *context)
+void DEH_SaveLineStart(deh_context_t *context)
 {
     if (context->type == DEH_INPUT_FILE)
     {
-	context->linestart = ftell(context->stream);
+        context->linestart = ftell(context->stream);
     }
-    else
-    if (context->type == DEH_INPUT_LUMP)
+    else if (context->type == DEH_INPUT_LUMP)
     {
-	context->linestart = context->input_buffer_pos;
+        context->linestart = context->input_buffer_pos;
     }
 }
 
 // [crispy] ... and reset context to start of current line
 // to retry with previous line parser in case of a parsing error
-void DEH_RestoreLineStart (deh_context_t *context)
+void DEH_RestoreLineStart(deh_context_t *context)
 {
     // [crispy] never point past the start
     if (context->linestart < 0)
-	return;
+        return;
 
     if (context->type == DEH_INPUT_FILE)
     {
-	fseek(context->stream, context->linestart, SEEK_SET);
+        fseek(context->stream, context->linestart, SEEK_SET);
     }
-    else
-    if (context->type == DEH_INPUT_LUMP)
+    else if (context->type == DEH_INPUT_LUMP)
     {
-	context->input_buffer_pos = context->linestart;
+        context->input_buffer_pos = context->linestart;
     }
 
     // [crispy] don't count this line twice
@@ -406,4 +404,3 @@ char *DEH_FileName(deh_context_t *context)
 
     return NULL;
 }
-

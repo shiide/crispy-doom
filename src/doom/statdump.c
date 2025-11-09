@@ -1,4 +1,4 @@
- /*
+/*
 
  Copyright(C) 2005-2014 Simon Howard
 
@@ -31,22 +31,17 @@
 #include "statdump.h"
 
 /* Par times for E1M1-E1M9. */
-static const int doom1_par_times[] =
-{
+static const int doom1_par_times[] = {
     30, 75, 120, 90, 165, 180, 180, 30, 165,
 };
 
 /* Par times for MAP01-MAP09. */
-static const int doom2_par_times[] =
-{
+static const int doom2_par_times[] = {
     30, 90, 120, 120, 90, 150, 120, 120, 270,
 };
 
 /* Player colors. */
-static const char *player_colors[] =
-{
-    "Green", "Indigo", "Brown", "Red"
-};
+static const char *player_colors[] = {"Green", "Indigo", "Brown", "Red"};
 
 // Array of end-of-level statistics that have been captured.
 
@@ -72,7 +67,7 @@ static void DiscoverGamemode(const wbstartstruct_t *stats, int num_stats)
         return;
     }
 
-    for (i=0; i<num_stats; ++i)
+    for (i = 0; i < num_stats; ++i)
     {
         level = stats[i].last;
 
@@ -98,15 +93,15 @@ static void DiscoverGamemode(const wbstartstruct_t *stats, int num_stats)
 
         partime = stats[i].partime;
 
-        if (partime == doom1_par_times[level] * TICRATE
-         && partime != doom2_par_times[level] * TICRATE)
+        if (partime == doom1_par_times[level] * TICRATE &&
+            partime != doom2_par_times[level] * TICRATE)
         {
             discovered_gamemission = doom;
             return;
         }
 
-        if (partime != doom1_par_times[level] * TICRATE
-         && partime == doom2_par_times[level] * TICRATE)
+        if (partime != doom1_par_times[level] * TICRATE &&
+            partime == doom2_par_times[level] * TICRATE)
         {
             discovered_gamemission = doom2;
             return;
@@ -121,7 +116,7 @@ static int GetNumPlayers(const wbstartstruct_t *stats)
     int i;
     int num_players = 0;
 
-    for (i=0; i<MAXPLAYERS; ++i)
+    for (i = 0; i < MAXPLAYERS; ++i)
     {
         if (stats->plyr[i].in)
         {
@@ -159,7 +154,7 @@ static void PrintPercentage(FILE *stream, int amount, int total)
 /* Display statistics for a single player. */
 
 static void PrintPlayerStats(FILE *stream, const wbstartstruct_t *stats,
-        int player_num)
+                             int player_num)
 {
     const wbplayerstruct_t *player = &stats->plyr[player_num];
 
@@ -197,7 +192,7 @@ static void PrintFragsTable(FILE *stream, const wbstartstruct_t *stats)
 
     fprintf(stream, "\t\t");
 
-    for (x=0; x<MAXPLAYERS; ++x)
+    for (x = 0; x < MAXPLAYERS; ++x)
     {
 
         if (!stats->plyr[x].in)
@@ -214,7 +209,7 @@ static void PrintFragsTable(FILE *stream, const wbstartstruct_t *stats)
 
     /* Print table */
 
-    for (y=0; y<MAXPLAYERS; ++y)
+    for (y = 0; y < MAXPLAYERS; ++y)
     {
         if (!stats->plyr[y].in)
         {
@@ -223,7 +218,7 @@ static void PrintFragsTable(FILE *stream, const wbstartstruct_t *stats)
 
         fprintf(stream, "\t%s\t|", player_colors[y]);
 
-        for (x=0; x<MAXPLAYERS; ++x)
+        for (x = 0; x < MAXPLAYERS; ++x)
         {
             if (!stats->plyr[x].in)
             {
@@ -257,8 +252,8 @@ static void PrintLevelName(FILE *stream, int episode, int level)
             break;
         default:
         case none:
-            fprintf(stream, "E%iM%i / MAP%02i\n",
-                    episode + 1, level + 1, level + 1);
+            fprintf(stream, "E%iM%i / MAP%02i\n", episode + 1, level + 1,
+                    level + 1);
             break;
     }
 
@@ -281,7 +276,7 @@ static void PrintStats(FILE *stream, const wbstartstruct_t *stats)
     fprintf(stream, " (par: %i:%02i)\n", partime / 60, partime % 60);
     fprintf(stream, "\n");
 
-    for (i=0; i<MAXPLAYERS; ++i)
+    for (i = 0; i < MAXPLAYERS; ++i)
     {
         if (stats->plyr[i].in)
         {
@@ -354,4 +349,3 @@ void StatDump(void)
         }
     }
 }
-

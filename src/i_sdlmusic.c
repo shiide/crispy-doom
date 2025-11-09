@@ -198,7 +198,9 @@ static boolean I_SDL_InitMusic(void)
         {
             fprintf(stderr, "Unable to set up sound.\n");
         }
-        else if (Mix_OpenAudioDevice(snd_samplerate, AUDIO_S16SYS, 2, 1024, NULL, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE) < 0)
+        else if (Mix_OpenAudioDevice(snd_samplerate, AUDIO_S16SYS, 2, 1024,
+                                     NULL,
+                                     SDL_AUDIO_ALLOW_FREQUENCY_CHANGE) < 0)
         {
             fprintf(stderr, "Error initializing SDL_mixer: %s\n",
                     Mix_GetError());
@@ -213,14 +215,15 @@ static boolean I_SDL_InitMusic(void)
         }
     }
 
-    #ifdef _WIN32
+#ifdef _WIN32
     // Never let SDL Mixer use native midi on Windows. Avoids SDL Mixer bug
     // where music volume affects global application volume.
     putenv(sdl_mixer_disable_nativemidi);
-    #endif
+#endif
 
     // Initialize SDL_Mixer for MIDI music playback
-    Mix_Init(MIX_INIT_MID | MIX_INIT_FLAC | MIX_INIT_OGG | MIX_INIT_MP3); // [crispy] initialize some more audio formats
+    Mix_Init(MIX_INIT_MID | MIX_INIT_FLAC | MIX_INIT_OGG |
+             MIX_INIT_MP3); // [crispy] initialize some more audio formats
 
     // Once initialization is complete, the temporary Timidity config
     // file can be removed.
@@ -390,7 +393,7 @@ static void *I_SDL_RegisterSong(void *data, int len)
     // [crispy] Reverse Choco's logic from "if (MIDI)" to "if (not MUS)"
     // MUS is the only format that requires conversion,
     // let SDL_Mixer figure out the others
-/*
+    /*
     if (IsMid(data, len) && len < MAXMIDLENGTH)
 */
     if (!IsMus(data, len)) // [crispy] MUS_HEADER_MAGIC
@@ -399,7 +402,7 @@ static void *I_SDL_RegisterSong(void *data, int len)
     }
     else
     {
-	// Assume a MUS file and try to convert
+        // Assume a MUS file and try to convert
 
         ConvertMus(data, len, filename);
     }
@@ -441,18 +444,12 @@ static boolean I_SDL_MusicIsPlaying(void)
     return Mix_PlayingMusic();
 }
 
-static const snddevice_t music_sdl_devices[] =
-{
-    SNDDEVICE_PAS,
-    SNDDEVICE_GUS,
-    SNDDEVICE_WAVEBLASTER,
-    SNDDEVICE_SOUNDCANVAS,
-    SNDDEVICE_GENMIDI,
-    SNDDEVICE_AWE32,
+static const snddevice_t music_sdl_devices[] = {
+    SNDDEVICE_PAS,         SNDDEVICE_GUS,     SNDDEVICE_WAVEBLASTER,
+    SNDDEVICE_SOUNDCANVAS, SNDDEVICE_GENMIDI, SNDDEVICE_AWE32,
 };
 
-const music_module_t music_sdl_module =
-{
+const music_module_t music_sdl_module = {
     music_sdl_devices,
     arrlen(music_sdl_devices),
     I_SDL_InitMusic,
@@ -465,7 +462,7 @@ const music_module_t music_sdl_module =
     I_SDL_PlaySong,
     I_SDL_StopSong,
     I_SDL_MusicIsPlaying,
-    NULL,  // Poll
+    NULL, // Poll
 };
 
 

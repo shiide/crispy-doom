@@ -50,7 +50,8 @@ static wchar_t *ConvertMultiByteToWide(const char *str, UINT code_page)
     if (!wlen)
     {
         errno = EINVAL;
-        printf("ConvertMultiByteToWide: Failed to convert path to wide encoding.\n");
+        printf("ConvertMultiByteToWide: Failed to convert path to wide "
+               "encoding.\n");
         return NULL;
     }
 
@@ -65,7 +66,8 @@ static wchar_t *ConvertMultiByteToWide(const char *str, UINT code_page)
     if (MultiByteToWideChar(code_page, 0, str, -1, wstr, wlen) == 0)
     {
         errno = EINVAL;
-        printf("ConvertMultiByteToWide: Failed to convert path to wide encoding.\n");
+        printf("ConvertMultiByteToWide: Failed to convert path to wide "
+               "encoding.\n");
         free(wstr);
         return NULL;
     }
@@ -83,7 +85,8 @@ static char *ConvertWideToMultiByte(const wchar_t *wstr, UINT code_page)
     if (!len)
     {
         errno = EINVAL;
-        printf("ConvertWideToMultiByte: Failed to convert path to multibyte encoding.\n");
+        printf("ConvertWideToMultiByte: Failed to convert path to multibyte "
+               "encoding.\n");
         return NULL;
     }
 
@@ -98,7 +101,8 @@ static char *ConvertWideToMultiByte(const wchar_t *wstr, UINT code_page)
     if (WideCharToMultiByte(code_page, 0, wstr, -1, str, len, NULL, NULL) == 0)
     {
         errno = EINVAL;
-        printf("ConvertWideToMultiByte: Failed to convert path to multibyte encoding.\n");
+        printf("ConvertWideToMultiByte: Failed to convert path to multibyte "
+               "encoding.\n");
         free(str);
         return NULL;
     }
@@ -243,7 +247,8 @@ int M_stat(const char *path, struct stat *buf)
 }
 
 #ifdef _WIN32
-typedef struct {
+typedef struct
+{
     char *var;
     const char *name;
 } env_var_t;
@@ -442,18 +447,18 @@ long M_FileLength(FILE *handle)
 boolean M_WriteFile(const char *name, const void *source, int length)
 {
     FILE *handle;
-    int	count;
+    int count;
 
     handle = M_fopen(name, "wb");
 
     if (handle == NULL)
-	return false;
+        return false;
 
     count = fwrite(source, 1, length, handle);
     fclose(handle);
 
     if (count < length)
-	return false;
+        return false;
 
     return true;
 }
@@ -466,24 +471,24 @@ boolean M_WriteFile(const char *name, const void *source, int length)
 int M_ReadFile(const char *name, byte **buffer)
 {
     FILE *handle;
-    int	count, length;
+    int count, length;
     byte *buf;
 
     handle = M_fopen(name, "rb");
     if (handle == NULL)
-	I_Error ("Couldn't read file %s", name);
+        I_Error("Couldn't read file %s", name);
 
     // find the size of the file by seeking to the end and
     // reading the current position
 
     length = M_FileLength(handle);
 
-    buf = Z_Malloc (length + 1, PU_STATIC, NULL);
+    buf = Z_Malloc(length + 1, PU_STATIC, NULL);
     count = fread(buf, 1, length, handle);
-    fclose (handle);
+    fclose(handle);
 
     if (count < length)
-	I_Error ("Couldn't read file %s", name);
+        I_Error("Couldn't read file %s", name);
 
     buf[length] = '\0';
     *buffer = buf;
@@ -525,10 +530,10 @@ char *M_TempFile(const char *s)
 
 boolean M_StrToInt(const char *str, int *result)
 {
-    return sscanf(str, " 0x%x", (unsigned int *) result) == 1
-        || sscanf(str, " 0X%x", (unsigned int *) result) == 1
-        || sscanf(str, " 0%o", (unsigned int *) result) == 1
-        || sscanf(str, " %d", result) == 1;
+    return sscanf(str, " 0x%x", (unsigned int *) result) == 1 ||
+           sscanf(str, " 0X%x", (unsigned int *) result) == 1 ||
+           sscanf(str, " 0%o", (unsigned int *) result) == 1 ||
+           sscanf(str, " %d", result) == 1;
 }
 
 // Returns the directory portion of the given path, without the trailing
@@ -594,7 +599,7 @@ void M_ExtractFileBase(const char *path, char *dest)
     // back up until a \ or the start
     while (src != path && *(src - 1) != DIR_SEPARATOR)
     {
-	src--;
+        src--;
     }
 
     filename = src;
@@ -611,12 +616,12 @@ void M_ExtractFileBase(const char *path, char *dest)
     {
         if (length >= 8)
         {
-            printf("Warning: Truncated '%s' lump name to '%.8s'.\n",
-                   filename, dest);
+            printf("Warning: Truncated '%s' lump name to '%.8s'.\n", filename,
+                   dest);
             break;
         }
 
-	dest[length++] = toupper((int)*src++);
+        dest[length++] = toupper((int) *src++);
     }
 }
 
@@ -703,8 +708,7 @@ char *M_StringDuplicate(const char *orig)
 
     if (result == NULL)
     {
-        I_Error("Failed to duplicate string (length %zu)\n",
-                strlen(orig));
+        I_Error("Failed to duplicate string (length %zu)\n", strlen(orig));
     }
 
     return result;
@@ -748,7 +752,8 @@ char *M_StringReplace(const char *haystack, const char *needle,
         return NULL;
     }
 
-    dst = result; dst_len = result_len;
+    dst = result;
+    dst_len = result_len;
     p = haystack;
 
     while (*p != '\0')
@@ -763,7 +768,8 @@ char *M_StringReplace(const char *haystack, const char *needle,
         else
         {
             *dst = *p;
-            ++dst; --dst_len;
+            ++dst;
+            --dst_len;
             ++p;
         }
     }
@@ -814,16 +820,16 @@ boolean M_StringConcat(char *dest, const char *src, size_t dest_size)
 
 boolean M_StringStartsWith(const char *s, const char *prefix)
 {
-    return strlen(s) >= strlen(prefix)
-        && strncmp(s, prefix, strlen(prefix)) == 0;
+    return strlen(s) >= strlen(prefix) &&
+           strncmp(s, prefix, strlen(prefix)) == 0;
 }
 
 // Returns true if 's' ends with the specified suffix.
 
 boolean M_StringEndsWith(const char *s, const char *suffix)
 {
-    return strlen(s) >= strlen(suffix)
-        && strcmp(s + strlen(s) - strlen(suffix), suffix) == 0;
+    return strlen(s) >= strlen(suffix) &&
+           strcmp(s + strlen(s) - strlen(suffix), suffix) == 0;
 }
 
 // Return a newly-malloced string with all the strings given as arguments
@@ -953,7 +959,7 @@ void M_NormalizeSlashes(char *str)
     }
 
     // Collapse multiple slashes
-    for (p = str; (*str++ = *p); )
+    for (p = str; (*str++ = *p);)
     {
         if (*p++ == DIR_SEPARATOR)
         {

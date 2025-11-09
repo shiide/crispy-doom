@@ -37,7 +37,6 @@ void S_Init(int sfxVolume, int musicVolume);
 void S_Shutdown(void);
 
 
-
 //
 // Per level startup code.
 // Kills playing sounds at start of level,
@@ -90,8 +89,7 @@ void S_SetSfxVolume(int volume);
 
 extern int snd_channels;
 
-void S_UpdateSndChannels (int choice);
-void S_UpdateStereoSeparation (void);
+void S_UpdateSndChannels(int choice);
+void S_UpdateStereoSeparation(void);
 
 #endif
-

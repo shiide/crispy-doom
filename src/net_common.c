@@ -92,7 +92,8 @@ void NET_Conn_SendPacket(net_connection_t *conn, net_packet_t *packet)
     NET_SendPacket(conn->addr, packet);
 }
 
-static void NET_Conn_ParseDisconnect(net_connection_t *conn, net_packet_t *packet)
+static void NET_Conn_ParseDisconnect(net_connection_t *conn,
+                                     net_packet_t *packet)
 {
     net_packet_t *reply;
 
@@ -127,7 +128,8 @@ static void NET_Conn_ParseDisconnectACK(net_connection_t *conn,
     }
 }
 
-static void NET_Conn_ParseReliableACK(net_connection_t *conn, net_packet_t *packet)
+static void NET_Conn_ParseReliableACK(net_connection_t *conn,
+                                      net_packet_t *packet)
 {
     unsigned int seq;
 
@@ -143,7 +145,7 @@ static void NET_Conn_ParseReliableACK(net_connection_t *conn, net_packet_t *pack
 
     // Is this an acknowledgement for the first packet in the list?
 
-    if (seq == (unsigned int)((conn->reliable_packets->seq + 1) & 0xff))
+    if (seq == (unsigned int) ((conn->reliable_packets->seq + 1) & 0xff))
     {
         net_reliable_packet_t *rp;
 
@@ -176,7 +178,7 @@ static boolean NET_Conn_ReliablePacket(net_connection_t *conn,
         return true;
     }
 
-    if (seq != (unsigned int)(conn->reliable_recv_seq & 0xff))
+    if (seq != (unsigned int) (conn->reliable_recv_seq & 0xff))
     {
         // This is not the next expected packet in the sequence!
         //
@@ -264,9 +266,9 @@ boolean NET_Conn_Packet(net_connection_t *conn, net_packet_t *packet,
 
 void NET_Conn_Disconnect(net_connection_t *conn)
 {
-    if (conn->state != NET_CONN_STATE_DISCONNECTED
-     && conn->state != NET_CONN_STATE_DISCONNECTING
-     && conn->state != NET_CONN_STATE_DISCONNECTED_SLEEP)
+    if (conn->state != NET_CONN_STATE_DISCONNECTED &&
+        conn->state != NET_CONN_STATE_DISCONNECTING &&
+        conn->state != NET_CONN_STATE_DISCONNECTED_SLEEP)
     {
         conn->state = NET_CONN_STATE_DISCONNECTING;
         conn->disconnect_reason = NET_DISCONNECT_LOCAL;
@@ -311,9 +313,9 @@ void NET_Conn_Run(net_connection_t *conn)
         //
         // NB.  This is braindead, we have a fixed time of one second.
 
-        if (conn->reliable_packets != NULL
-         && (conn->reliable_packets->last_send_time < 0
-          || nowtime - conn->reliable_packets->last_send_time > 1000))
+        if (conn->reliable_packets != NULL &&
+            (conn->reliable_packets->last_send_time < 0 ||
+             nowtime - conn->reliable_packets->last_send_time > 1000))
         {
             // Packet timed out, time to resend
 
@@ -325,8 +327,7 @@ void NET_Conn_Run(net_connection_t *conn)
     {
         // Waiting for a reply to our DISCONNECT request.
 
-        if (conn->last_send_time < 0
-         || nowtime - conn->last_send_time > 1000)
+        if (conn->last_send_time < 0 || nowtime - conn->last_send_time > 1000)
         {
             // it has been a second since the last disconnect packet
             // was sent, and still no reply.
@@ -392,9 +393,9 @@ net_packet_t *NET_Conn_NewReliable(net_connection_t *conn, int packet_type)
     rp->seq = conn->reliable_send_seq;
     rp->last_send_time = -1;
 
-    for (listend = &conn->reliable_packets;
-         *listend != NULL;
-         listend = &((*listend)->next));
+    for (listend = &conn->reliable_packets; *listend != NULL;
+         listend = &((*listend)->next))
+        ;
 
     *listend = rp;
 
@@ -524,4 +525,3 @@ void NET_LogPacket(net_packet_t *packet)
     }
     fprintf(net_debug, "\n");
 }
-

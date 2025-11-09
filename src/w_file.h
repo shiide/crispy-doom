@@ -35,8 +35,8 @@ typedef struct
 
     // Read data from the specified position in the file into the
     // provided buffer.  Returns the number of bytes read.
-    size_t (*Read)(wad_file_t *file, unsigned int offset,
-                   void *buffer, size_t buffer_len);
+    size_t (*Read)(wad_file_t *file, unsigned int offset, void *buffer,
+                   size_t buffer_len);
 } wad_file_class_t;
 
 
@@ -80,7 +80,7 @@ void W_CloseFile(wad_file_t *wad);
 // data is read from the specified offset from the start of the file.
 // Returns the number of bytes read.
 
-size_t W_Read(wad_file_t *wad, unsigned int offset,
-              void *buffer, size_t buffer_len);
+size_t W_Read(wad_file_t *wad, unsigned int offset, void *buffer,
+              size_t buffer_len);
 
 #endif /* #ifndef __W_FILE__ */

@@ -25,7 +25,8 @@
 
 #include "dstrings.h"
 
-typedef struct {
+typedef struct
+{
     const char *macro;
     const char *string;
 } bex_string_t;
@@ -342,7 +343,7 @@ static void *DEH_BEXStrStart(deh_context_t *context, char *line)
 
     if (sscanf(line, "%9s", s) == 0 || strcmp("[STRINGS]", s))
     {
-	DEH_Warning(context, "Parse error on section start");
+        DEH_Warning(context, "Parse error on section start");
     }
 
     return NULL;
@@ -355,25 +356,19 @@ static void DEH_BEXStrParseLine(deh_context_t *context, char *line, void *tag)
 
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
-	DEH_Warning(context, "Failed to parse assignment");
-	return;
+        DEH_Warning(context, "Failed to parse assignment");
+        return;
     }
 
     for (i = 0; i < arrlen(bex_stringtable); i++)
     {
-	if (!strcasecmp(bex_stringtable[i].macro, variable_name))
-	{
-	    DEH_AddStringReplacement(bex_stringtable[i].string, value);
-	}
+        if (!strcasecmp(bex_stringtable[i].macro, variable_name))
+        {
+            DEH_AddStringReplacement(bex_stringtable[i].string, value);
+        }
     }
 }
 
-deh_section_t deh_section_bexstr =
-{
-    "[STRINGS]",
-    NULL,
-    DEH_BEXStrStart,
-    DEH_BEXStrParseLine,
-    NULL,
-    NULL,
+deh_section_t deh_section_bexstr = {
+    "[STRINGS]", NULL, DEH_BEXStrStart, DEH_BEXStrParseLine, NULL, NULL,
 };

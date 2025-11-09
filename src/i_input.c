@@ -37,14 +37,12 @@ static const int scancode_translate_table[] = SCANCODE_TO_KEYS_ARRAY;
 // Lookup table for mapping ASCII characters to their equivalent when
 // shift is pressed on a US layout keyboard. This is the original table
 // as found in the Doom sources, comments and all.
-static const char shiftxform[] =
-{
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-    21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-    31, ' ', '!', '"', '#', '$', '%', '&',
+static const char shiftxform[] = {
+    0,    1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,
+    15,   16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
+    30,   31,  ' ', '!', '"', '#', '$', '%', '&',
     '"', // shift-'
-    '(', ')', '*', '+',
+    '(',  ')', '*', '+',
     '<', // shift-,
     '_', // shift--
     '>', // shift-.
@@ -63,18 +61,16 @@ static const char shiftxform[] =
     ':', // shift-;
     '<',
     '+', // shift-=
-    '>', '?', '@',
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-    'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    '>',  '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+    'M',  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     '[', // shift-[
     '!', // shift-backslash - OH MY GOD DOES WATCOM SUCK
     ']', // shift-]
-    '"', '_',
+    '"',  '_',
     '\'', // shift-`
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-    'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    '{', '|', '}', '~', 127
-};
+    'A',  'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+    'P',  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '{', '|', '}', '~',
+    127};
 
 // If true, I_StartTextInput() has been called, and we are populating
 // the data3 field of ev_keydown events.
@@ -187,8 +183,8 @@ static int GetTypedChar(SDL_Keysym *sym)
 
         // If shift is held down, apply the original uppercase
         // translation table used under DOS.
-        if ((SDL_GetModState() & KMOD_SHIFT) != 0
-         && result >= 0 && result < arrlen(shiftxform))
+        if ((SDL_GetModState() & KMOD_SHIFT) != 0 && result >= 0 &&
+            result < arrlen(shiftxform))
         {
             result = shiftxform[result];
         }
@@ -202,8 +198,10 @@ static int GetTypedChar(SDL_Keysym *sym)
         // Special cases, where we always return a fixed value.
         switch (sym->sym)
         {
-            case SDLK_BACKSPACE: return KEY_BACKSPACE;
-            case SDLK_RETURN:    return KEY_ENTER;
+            case SDLK_BACKSPACE:
+                return KEY_BACKSPACE;
+            case SDLK_RETURN:
+                return KEY_ENTER;
             default:
                 break;
         }
@@ -230,17 +228,17 @@ static int GetTypedChar(SDL_Keysym *sym)
         //
         // So we're stuck with this as a rather fragile alternative.
 
-        if (SDL_PeepEvents(&next_event, 1, SDL_PEEKEVENT,
-                           SDL_FIRSTEVENT, SDL_LASTEVENT) == 1
-         && next_event.type == SDL_TEXTINPUT)
+        if (SDL_PeepEvents(&next_event, 1, SDL_PEEKEVENT, SDL_FIRSTEVENT,
+                           SDL_LASTEVENT) == 1 &&
+            next_event.type == SDL_TEXTINPUT)
         {
             // If an SDL_TEXTINPUT event is found, we always assume it
             // matches the key press. The input text must be a single
             // ASCII character - if it isn't, it's possible the input
             // char is a Unicode value instead; better to send a null
             // character than the unshifted key.
-            if (strlen(next_event.text.text) == 1
-             && (next_event.text.text[0] & 0x80) == 0)
+            if (strlen(next_event.text.text) == 1 &&
+                (next_event.text.text[0] & 0x80) == 0)
             {
                 return next_event.text.text[0];
             }
@@ -381,11 +379,11 @@ static void MapMouseWheelToButtons(SDL_MouseWheelEvent *wheel)
     int button;
 
     if (wheel->y <= 0)
-    {   // scroll down
+    { // scroll down
         button = 4;
     }
     else
-    {   // scroll up
+    { // scroll up
         button = 3;
     }
 
@@ -434,7 +432,7 @@ static float y_threshold;
 // The running total is used to determine if mouse acceleration should be
 // applied.
 
-#define MOUSE_BUFFER_SIZE 32
+#define MOUSE_BUFFER_SIZE     32
 #define MOUSE_BUFFER_DEPTH_MS 28
 
 typedef struct
@@ -507,7 +505,6 @@ static void UpdateMouseAccel(int x, int y)
         x_threshold = mouse_threshold * delta_t * TICRATE / 1000.0;
         y_threshold = mouse_threshold_y * delta_t * TICRATE / 1000.0;
     }
-
 }
 
 // [crispy] Change to double
@@ -603,17 +600,18 @@ void I_ReadMouseUncapped(void)
 // [crispy]
 void I_BindStrifeInputVariables(void)
 {
-    M_BindIntVariable("runcentering",              &runcentering);
+    M_BindIntVariable("runcentering", &runcentering);
 }
 
 // Bind all variables controlling input options.
 void I_BindInputVariables(void)
 {
-    M_BindFloatVariable("mouse_acceleration",      &mouse_acceleration);
-    M_BindIntVariable("mouse_threshold",           &mouse_threshold);
-    M_BindIntVariable("vanilla_keyboard_mapping",  &vanilla_keyboard_mapping);
-    M_BindIntVariable("novert",                    &novert);
-    M_BindFloatVariable("mouse_acceleration_y",    &mouse_acceleration_y); // [crispy]
-    M_BindIntVariable("mouse_threshold_y",         &mouse_threshold_y); // [crispy]
-    M_BindIntVariable("mouse_y_invert",            &mouse_y_invert); // [crispy]
+    M_BindFloatVariable("mouse_acceleration", &mouse_acceleration);
+    M_BindIntVariable("mouse_threshold", &mouse_threshold);
+    M_BindIntVariable("vanilla_keyboard_mapping", &vanilla_keyboard_mapping);
+    M_BindIntVariable("novert", &novert);
+    M_BindFloatVariable("mouse_acceleration_y",
+                        &mouse_acceleration_y);                 // [crispy]
+    M_BindIntVariable("mouse_threshold_y", &mouse_threshold_y); // [crispy]
+    M_BindIntVariable("mouse_y_invert", &mouse_y_invert);       // [crispy]
 }

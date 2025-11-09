@@ -25,32 +25,29 @@
 #include "r_data.h"
 
 
-
-
 //
 // POV related.
 //
-extern fixed_t		viewcos;
-extern fixed_t		viewsin;
+extern fixed_t viewcos;
+extern fixed_t viewsin;
 
-extern int		viewwindowx;
-extern int		viewwindowy;
+extern int viewwindowx;
+extern int viewwindowy;
 
 
+extern int centerx;
+extern int centery;
 
-extern int		centerx;
-extern int		centery;
+extern fixed_t centerxfrac;
+extern fixed_t centeryfrac;
+extern fixed_t projection;
 
-extern fixed_t		centerxfrac;
-extern fixed_t		centeryfrac;
-extern fixed_t		projection;
+extern int validcount;
 
-extern int		validcount;
+extern int linecount;
+extern int loopcount;
 
-extern int		linecount;
-extern int		loopcount;
-
-extern  boolean setsizeneeded;
+extern boolean setsizeneeded;
 
 
 //
@@ -70,12 +67,12 @@ extern int LIGHTSCALESHIFT;
 extern int MAXLIGHTZ;
 extern int LIGHTZSHIFT;
 
-extern lighttable_t***	scalelight;
-extern lighttable_t**	scalelightfixed;
-extern lighttable_t***	zlight;
+extern lighttable_t ***scalelight;
+extern lighttable_t **scalelightfixed;
+extern lighttable_t ***zlight;
 
-extern int		extralight;
-extern lighttable_t*	fixedcolormap;
+extern int extralight;
+extern lighttable_t *fixedcolormap;
 
 
 // Number of diminishing brightness levels.
@@ -86,75 +83,46 @@ extern int NUMCOLORMAPS;
 // Blocky/low detail mode.
 //B remove this?
 //  0 = high, 1 = low
-extern	int		detailshift;
+extern int detailshift;
 
 
 //
 // Function pointers to switch refresh/drawing functions.
 // Used to select shadow mode etc.
 //
-extern void		(*colfunc) (void);
-extern void		(*transcolfunc) (void);
-extern void		(*basecolfunc) (void);
-extern void		(*fuzzcolfunc) (void);
-extern void		(*tlcolfunc) (void);
+extern void (*colfunc)(void);
+extern void (*transcolfunc)(void);
+extern void (*basecolfunc)(void);
+extern void (*fuzzcolfunc)(void);
+extern void (*tlcolfunc)(void);
 // No shadow effects on floors.
-extern void		(*spanfunc) (void);
+extern void (*spanfunc)(void);
 
 
 // [crispy] smooth texture scrolling
-extern void R_InterpolateTextureOffsets (void);
+extern void R_InterpolateTextureOffsets(void);
 
 
 //
 // Utility functions.
-int
-R_PointOnSide
-( fixed_t	x,
-  fixed_t	y,
-  node_t*	node );
+int R_PointOnSide(fixed_t x, fixed_t y, node_t *node);
 
-int
-R_PointOnSegSide
-( fixed_t	x,
-  fixed_t	y,
-  seg_t*	line );
+int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
 
-angle_t
-R_PointToAngle
-( fixed_t	x,
-  fixed_t	y );
+angle_t R_PointToAngle(fixed_t x, fixed_t y);
 
-angle_t
-R_PointToAngleCrispy
-( fixed_t	x,
-  fixed_t	y );
+angle_t R_PointToAngleCrispy(fixed_t x, fixed_t y);
 
-angle_t
-R_PointToAngle2
-( fixed_t	x1,
-  fixed_t	y1,
-  fixed_t	x2,
-  fixed_t	y2 );
+angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
-fixed_t
-R_PointToDist
-( fixed_t	x,
-  fixed_t	y );
+fixed_t R_PointToDist(fixed_t x, fixed_t y);
 
 
-fixed_t R_ScaleFromGlobalAngle (angle_t visangle);
+fixed_t R_ScaleFromGlobalAngle(angle_t visangle);
 
-subsector_t*
-R_PointInSubsector
-( fixed_t	x,
-  fixed_t	y );
+subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 
-void
-R_AddPointToBox
-( int		x,
-  int		y,
-  fixed_t*	box );
+void R_AddPointToBox(int x, int y, fixed_t *box);
 
 
 inline static fixed_t LerpFixed(fixed_t oldvalue, fixed_t newvalue)
@@ -164,7 +132,8 @@ inline static fixed_t LerpFixed(fixed_t oldvalue, fixed_t newvalue)
 
 inline static int LerpInt(int oldvalue, int newvalue)
 {
-    return (oldvalue + (int)((newvalue - oldvalue) * FIXED2DOUBLE(fractionaltic)));
+    return (oldvalue +
+            (int) ((newvalue - oldvalue) * FIXED2DOUBLE(fractionaltic)));
 }
 
 // [AM] Interpolate between two angles.
@@ -175,16 +144,20 @@ inline static angle_t LerpAngle(angle_t oangle, angle_t nangle)
     else if (nangle > oangle)
     {
         if (nangle - oangle < ANG270)
-            return oangle + (angle_t)((nangle - oangle) * FIXED2DOUBLE(fractionaltic));
+            return oangle +
+                   (angle_t) ((nangle - oangle) * FIXED2DOUBLE(fractionaltic));
         else // Wrapped around
-            return oangle - (angle_t)((oangle - nangle) * FIXED2DOUBLE(fractionaltic));
+            return oangle -
+                   (angle_t) ((oangle - nangle) * FIXED2DOUBLE(fractionaltic));
     }
     else // nangle < oangle
     {
         if (oangle - nangle < ANG270)
-            return oangle - (angle_t)((oangle - nangle) * FIXED2DOUBLE(fractionaltic));
+            return oangle -
+                   (angle_t) ((oangle - nangle) * FIXED2DOUBLE(fractionaltic));
         else // Wrapped around
-            return oangle + (angle_t)((nangle - oangle) * FIXED2DOUBLE(fractionaltic));
+            return oangle +
+                   (angle_t) ((nangle - oangle) * FIXED2DOUBLE(fractionaltic));
     }
 }
 
@@ -193,13 +166,13 @@ inline static angle_t LerpAngle(angle_t oangle, angle_t nangle)
 //
 
 // Called by G_Drawer.
-void R_RenderPlayerView (player_t *player);
+void R_RenderPlayerView(player_t *player);
 
 // Called by startup code.
-void R_Init (void);
+void R_Init(void);
 
 // Called by M_Responder.
-void R_SetViewSize (int blocks, int detail);
+void R_SetViewSize(int blocks, int detail);
 
 void R_InitColormaps(void);
 void R_ExecuteSetViewSize(void);

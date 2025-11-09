@@ -47,28 +47,24 @@ typedef struct
 
 static void MapFile(win32_wad_file_t *wad, const char *filename)
 {
-    wad->handle_map = CreateFileMapping(wad->handle,
-                                        NULL,
-                                        PAGE_WRITECOPY,
-                                        0,
-                                        0,
-                                        NULL);
+    wad->handle_map =
+        CreateFileMapping(wad->handle, NULL, PAGE_WRITECOPY, 0, 0, NULL);
 
     if (wad->handle_map == NULL)
     {
-        fprintf(stderr, "W_Win32_OpenFile: Unable to CreateFileMapping() "
-                        "for %s\n", filename);
+        fprintf(stderr,
+                "W_Win32_OpenFile: Unable to CreateFileMapping() "
+                "for %s\n",
+                filename);
         return;
     }
 
-    wad->wad.mapped = MapViewOfFile(wad->handle_map,
-                                    FILE_MAP_COPY,
-                                    0, 0, 0);
+    wad->wad.mapped = MapViewOfFile(wad->handle_map, FILE_MAP_COPY, 0, 0, 0);
 
     if (wad->wad.mapped == NULL)
     {
         fprintf(stderr, "W_Win32_OpenFile: Unable to MapViewOfFile() for %s\n",
-                        filename);
+                filename);
     }
 }
 
@@ -98,16 +94,11 @@ static wad_file_t *W_Win32_OpenFile(const char *path)
 
     if (wpath == NULL)
     {
-       return NULL;
+        return NULL;
     }
 
-    handle = CreateFileW(wpath,
-                         GENERIC_READ,
-                         FILE_SHARE_READ,
-                         NULL,
-                         OPEN_EXISTING,
-                         FILE_ATTRIBUTE_NORMAL,
-                         NULL);
+    handle = CreateFileW(wpath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
     free(wpath);
 
@@ -162,8 +153,8 @@ static void W_Win32_CloseFile(wad_file_t *wad)
 // Read data from the specified position in the file into the
 // provided buffer.  Returns the number of bytes read.
 
-size_t W_Win32_Read(wad_file_t *wad, unsigned int offset,
-                   void *buffer, size_t buffer_len)
+size_t W_Win32_Read(wad_file_t *wad, unsigned int offset, void *buffer,
+                    size_t buffer_len)
 {
     win32_wad_file_t *win32_wad;
     DWORD bytes_read;
@@ -177,8 +168,7 @@ size_t W_Win32_Read(wad_file_t *wad, unsigned int offset,
 
     if (result == INVALID_SET_FILE_POINTER)
     {
-        I_Error("W_Win32_Read: Failed to set file pointer to %i",
-                offset);
+        I_Error("W_Win32_Read: Failed to set file pointer to %i", offset);
     }
 
     // Read into the buffer.
@@ -192,8 +182,7 @@ size_t W_Win32_Read(wad_file_t *wad, unsigned int offset,
 }
 
 
-wad_file_class_t win32_wad_file =
-{
+wad_file_class_t win32_wad_file = {
     W_Win32_OpenFile,
     W_Win32_CloseFile,
     W_Win32_Read,
@@ -201,4 +190,3 @@ wad_file_class_t win32_wad_file =
 
 
 #endif /* #ifdef _WIN32 */
-

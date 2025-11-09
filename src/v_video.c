@@ -87,8 +87,8 @@ void V_MarkRect(int x, int y, int width, int height)
 
     if (dest_screen == I_VideoBuffer)
     {
-        M_AddToBox (dirtybox, x, y);
-        M_AddToBox (dirtybox, x + width-1, y + height-1);
+        M_AddToBox(dirtybox, x, y);
+        M_AddToBox(dirtybox, x + width - 1, y + height - 1);
     }
 }
 
@@ -96,8 +96,7 @@ void V_MarkRect(int x, int y, int width, int height)
 //
 // V_CopyRect
 //
-void V_CopyRect(int srcx, int srcy, pixel_t *source,
-                int width, int height,
+void V_CopyRect(int srcx, int srcy, pixel_t *source, int width, int height,
                 int destx, int desty)
 {
     pixel_t *src;
@@ -111,31 +110,27 @@ void V_CopyRect(int srcx, int srcy, pixel_t *source,
     desty <<= crispy->hires;
 
 #ifdef RANGECHECK
-    if (srcx < 0
-     || srcx + width > SCREENWIDTH
-     || srcy < 0
-     || srcy + height > SCREENHEIGHT
-     || destx < 0
-     || destx /* + width */ > SCREENWIDTH
-     || desty < 0
-     || desty /* + height */ > SCREENHEIGHT)
+    if (srcx < 0 || srcx + width > SCREENWIDTH || srcy < 0 ||
+        srcy + height > SCREENHEIGHT || destx < 0 ||
+        destx /* + width */ > SCREENWIDTH || desty < 0 ||
+        desty /* + height */ > SCREENHEIGHT)
     {
-        I_Error ("Bad V_CopyRect");
+        I_Error("Bad V_CopyRect");
     }
 #endif
 
     // [crispy] prevent framebuffer overflow
     if (destx + width > SCREENWIDTH)
-	width = SCREENWIDTH - destx;
+        width = SCREENWIDTH - destx;
     if (desty + height > SCREENHEIGHT)
-	height = SCREENHEIGHT - desty;
+        height = SCREENHEIGHT - desty;
 
     V_MarkRect(destx, desty, width, height);
 
     src = source + SCREENWIDTH * srcy + srcx;
     dest = dest_screen + SCREENWIDTH * desty + destx;
 
-    for ( ; height>0 ; height--)
+    for (; height > 0; height--)
     {
         memcpy(dest, src, width * sizeof(*dest));
         src += SCREENWIDTH;
@@ -166,83 +161,133 @@ void V_SetPatchClipCallback(vpatchclipfunc_t func)
 // [crispy] four different rendering functions
 // for each possible combination of dp_translation and dp_translucent:
 // (1) normal, opaque patch
-static const inline pixel_t drawpatchpx00 (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawpatchpx00(const pixel_t dest,
+                                          const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return source;}
+{
+    return source;
+}
 #else
-{return pal_color[source];}
+{
+    return pal_color[source];
+}
 #endif
 // (2) color-translated, opaque patch
-static const inline pixel_t drawpatchpx01 (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawpatchpx01(const pixel_t dest,
+                                          const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return dp_translation[source];}
+{
+    return dp_translation[source];
+}
 #else
-{return pal_color[dp_translation[source]];}
+{
+    return pal_color[dp_translation[source]];
+}
 #endif
 // (3) normal, translucent patch
-static const inline pixel_t drawpatchpx10 (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawpatchpx10(const pixel_t dest,
+                                          const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tranmap[(dest<<8)+source];}
+{
+    return tranmap[(dest << 8) + source];
+}
 #else
-{return I_BlendOverTranmap(dest, pal_color[source]);}
+{
+    return I_BlendOverTranmap(dest, pal_color[source]);
+}
 #endif
 // (4) color-translated, translucent patch
-static const inline pixel_t drawpatchpx11 (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawpatchpx11(const pixel_t dest,
+                                          const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tranmap[(dest<<8)+dp_translation[source]];}
+{
+    return tranmap[(dest << 8) + dp_translation[source]];
+}
 #else
-{return I_BlendOverTranmap(dest, pal_color[dp_translation[source]]);}
+{
+    return I_BlendOverTranmap(dest, pal_color[dp_translation[source]]);
+}
 #endif
 
 // [crispy] TINTTAB rendering functions:
 // V_DrawShadowedPatch (shadow only)
-static const inline pixel_t drawshadow (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawshadow(const pixel_t dest, const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tinttable[(dest<<8)];}
+{
+    return tinttable[(dest << 8)];
+}
 #else
-{return I_BlendDark(dest, 0xa0);} // 160 (62.75%) of 256 full translucency
+{
+    return I_BlendDark(dest, 0xa0);
+} // 160 (62.75%) of 256 full translucency
 #endif
 // V_DrawTLPatch (translucent patch, no coloring or color-translation are used)
-static const inline pixel_t drawtinttab (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawtinttab(const pixel_t dest,
+                                        const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tinttable[dest+(source<<8)];}
+{
+    return tinttable[dest + (source << 8)];
+}
 #else
-{return I_BlendOverTinttab(dest, pal_color[source]);}
+{
+    return I_BlendOverTinttab(dest, pal_color[source]);
+}
 #endif
 // V_DrawTLPatch Translated Option (translucent patch, color-translated)
-static const inline pixel_t drawtrtinttab (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawtrtinttab(const pixel_t dest,
+                                          const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tinttable[dest+(dp_translation[source]<<8)];}
+{
+    return tinttable[dest + (dp_translation[source] << 8)];
+}
 #else
-{return I_BlendOverTinttab(dest, pal_color[dp_translation[source]]);}
+{
+    return I_BlendOverTinttab(dest, pal_color[dp_translation[source]]);
+}
 #endif
 // V_DrawAltTLPatch (translucent patch, no coloring or color-translation are used)
-static const inline pixel_t drawalttinttab (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawalttinttab(const pixel_t dest,
+                                           const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tinttable[(dest<<8)+source];}
+{
+    return tinttable[(dest << 8) + source];
+}
 #else
-{return I_BlendOverAltTinttab(dest, pal_color[source]);}
+{
+    return I_BlendOverAltTinttab(dest, pal_color[source]);
+}
 #endif
 // V_DrawAltTLPatch Translated Option (translucent patch, color-translated)
-static const inline pixel_t drawtralttinttab (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawtralttinttab(const pixel_t dest,
+                                             const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return tinttable[(dest<<8)+dp_translation[source]];}
+{
+    return tinttable[(dest << 8) + dp_translation[source]];
+}
 #else
-{return I_BlendOverAltTinttab(dest, pal_color[dp_translation[source]]);}
+{
+    return I_BlendOverAltTinttab(dest, pal_color[dp_translation[source]]);
+}
 #endif
 // V_DrawXlaPatch (translucent patch, no coloring or color-translation are used)
-static const inline pixel_t drawxlatab (const pixel_t dest, const pixel_t source)
+static const inline pixel_t drawxlatab(const pixel_t dest, const pixel_t source)
 #ifndef CRISPY_TRUECOLOR
-{return xlatab[dest+(source<<8)];}
+{
+    return xlatab[dest + (source << 8)];
+}
 #else
-{return I_BlendOverXlatab(dest, pal_color[source]);}
+{
+    return I_BlendOverXlatab(dest, pal_color[source]);
+}
 #endif
 
 // [crispy] array of function pointers holding the different rendering functions
-typedef const pixel_t drawpatchpx_t (const pixel_t dest, const pixel_t source);
-static drawpatchpx_t *const drawpatchpx_a[2][2] = {{drawpatchpx11, drawpatchpx10}, {drawpatchpx01, drawpatchpx00}};
+typedef const pixel_t drawpatchpx_t(const pixel_t dest, const pixel_t source);
+static drawpatchpx_t *const drawpatchpx_a[2][2] = {
+    {drawpatchpx11, drawpatchpx10}, {drawpatchpx01, drawpatchpx00}};
 static drawpatchpx_t *const drawtlpatchpx_a[2] = {drawtrtinttab, drawtinttab};
-static drawpatchpx_t *const drawalttlpatchpx_a[2] = {drawtralttinttab, drawalttinttab};
+static drawpatchpx_t *const drawalttlpatchpx_a[2] = {drawtralttinttab,
+                                                     drawalttinttab};
 
 static fixed_t dx, dxi, dy, dyi;
 
@@ -257,13 +302,14 @@ void V_DrawPatch(int x, int y, patch_t *patch)
     int w;
 
     // [crispy] four different rendering functions
-    drawpatchpx_t *const drawpatchpx = drawpatchpx_a[!dp_translucent][!dp_translation];
+    drawpatchpx_t *const drawpatchpx =
+        drawpatchpx_a[!dp_translucent][!dp_translation];
 
     y -= SHORT(patch->topoffset);
     x -= SHORT(patch->leftoffset);
     x += WIDESCREENDELTA; // [crispy] horizontal widescreen offset
 
-/*
+    /*
     // haleyjd 08/28/10: Strife needs silent error checking here.
     if(patchclip_callback)
     {
@@ -273,10 +319,8 @@ void V_DrawPatch(int x, int y, patch_t *patch)
 */
 
 #ifdef RANGECHECK_NOTHANKS
-    if (x < 0
-     || x + SHORT(patch->width) > ORIGWIDTH
-     || y < 0
-     || y + SHORT(patch->height) > ORIGHEIGHT)
+    if (x < 0 || x + SHORT(patch->width) > ORIGWIDTH || y < 0 ||
+        y + SHORT(patch->height) > ORIGHEIGHT)
     {
         I_Error("Bad V_DrawPatch");
     }
@@ -287,18 +331,19 @@ void V_DrawPatch(int x, int y, patch_t *patch)
     col = 0;
     if (x < 0)
     {
-	col += dxi * ((-x * dx) >> FRACBITS);
-	x = 0;
+        col += dxi * ((-x * dx) >> FRACBITS);
+        x = 0;
     }
 
-    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH + ((x * dx) >> FRACBITS);
+    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH +
+              ((x * dx) >> FRACBITS);
 
     w = SHORT(patch->width);
 
     // convert x to screen position
     x = (x * dx) >> FRACBITS;
 
-    for ( ; col<w << FRACBITS ; x++, col+=dxi, desttop++)
+    for (; col < w << FRACBITS; x++, col += dxi, desttop++)
     {
         int topdelta = -1;
 
@@ -308,7 +353,8 @@ void V_DrawPatch(int x, int y, patch_t *patch)
             break;
         }
 
-        column = (column_t *)((byte *)patch + LONG(patch->columnofs[col >> FRACBITS]));
+        column = (column_t *) ((byte *) patch +
+                               LONG(patch->columnofs[col >> FRACBITS]));
 
         // step through the posts in a column
         while (column->topdelta != 0xff)
@@ -324,8 +370,8 @@ void V_DrawPatch(int x, int y, patch_t *patch)
                 topdelta = column->topdelta;
             }
             top = ((y + topdelta) * dy) >> FRACBITS;
-            source = (byte *)column + 3;
-            dest = desttop + ((topdelta * dy) >> FRACBITS)*SCREENWIDTH;
+            source = (byte *) column + 3;
+            dest = desttop + ((topdelta * dy) >> FRACBITS) * SCREENWIDTH;
             count = (column->length * dy) >> FRACBITS;
 
             // [crispy] too low / height
@@ -350,14 +396,15 @@ void V_DrawPatch(int x, int y, patch_t *patch)
                 srccol += dyi;
                 dest += SCREENWIDTH;
             }
-            column = (column_t *)((byte *)column + column->length + 4);
+            column = (column_t *) ((byte *) column + column->length + 4);
         }
     }
 }
 
 void V_DrawPatchFullScreen(patch_t *patch, boolean flipped)
 {
-    int x = ((SCREENWIDTH >> crispy->hires) - SHORT(patch->width)) / 2 - WIDESCREENDELTA;
+    int x = ((SCREENWIDTH >> crispy->hires) - SHORT(patch->width)) / 2 -
+            WIDESCREENDELTA;
     static int black = -1;
 
     patch->leftoffset = 0;
@@ -408,7 +455,7 @@ void V_DrawPatchFlipped(int x, int y, patch_t *patch)
     x -= SHORT(patch->leftoffset);
     x += WIDESCREENDELTA; // [crispy] horizontal widescreen offset
 
-/*
+    /*
     // haleyjd 08/28/10: Strife needs silent error checking here.
     if(patchclip_callback)
     {
@@ -418,32 +465,31 @@ void V_DrawPatchFlipped(int x, int y, patch_t *patch)
 */
 
 #ifdef RANGECHECK_NOTHANKS
-    if (x < 0
-     || x + SHORT(patch->width) > ORIGWIDTH
-     || y < 0
-     || y + SHORT(patch->height) > ORIGHEIGHT)
+    if (x < 0 || x + SHORT(patch->width) > ORIGWIDTH || y < 0 ||
+        y + SHORT(patch->height) > ORIGHEIGHT)
     {
         I_Error("Bad V_DrawPatchFlipped");
     }
 #endif
 
-    V_MarkRect (x, y, SHORT(patch->width), SHORT(patch->height));
+    V_MarkRect(x, y, SHORT(patch->width), SHORT(patch->height));
 
     col = 0;
     if (x < 0)
     {
-	col += dxi * ((-x * dx) >> FRACBITS);
-	x = 0;
+        col += dxi * ((-x * dx) >> FRACBITS);
+        x = 0;
     }
 
-    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH + ((x * dx) >> FRACBITS);
+    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH +
+              ((x * dx) >> FRACBITS);
 
     w = SHORT(patch->width);
 
     // convert x to screen position
     x = (x * dx) >> FRACBITS;
 
-    for ( ; col<w << FRACBITS ; x++, col+=dxi, desttop++)
+    for (; col < w << FRACBITS; x++, col += dxi, desttop++)
     {
         int topdelta = -1;
 
@@ -459,10 +505,12 @@ void V_DrawPatchFlipped(int x, int y, patch_t *patch)
             break;
         }
 
-        column = (column_t *)((byte *)patch + LONG(patch->columnofs[w-1-(col >> FRACBITS)]));
+        column =
+            (column_t *) ((byte *) patch +
+                          LONG(patch->columnofs[w - 1 - (col >> FRACBITS)]));
 
         // step through the posts in a column
-        while (column->topdelta != 0xff )
+        while (column->topdelta != 0xff)
         {
             int top, srccol = 0;
             // [crispy] support for DeePsea tall patches
@@ -475,8 +523,8 @@ void V_DrawPatchFlipped(int x, int y, patch_t *patch)
                 topdelta = column->topdelta;
             }
             top = ((y + topdelta) * dy) >> FRACBITS;
-            source = (byte *)column + 3;
-            dest = desttop + ((topdelta * dy) >> FRACBITS)*SCREENWIDTH;
+            source = (byte *) column + 3;
+            dest = desttop + ((topdelta * dy) >> FRACBITS) * SCREENWIDTH;
             count = (column->length * dy) >> FRACBITS;
 
             // [crispy] too low / height
@@ -505,11 +553,10 @@ void V_DrawPatchFlipped(int x, int y, patch_t *patch)
                 srccol += dyi;
                 dest += SCREENWIDTH;
             }
-            column = (column_t *)((byte *)column + column->length + 4);
+            column = (column_t *) ((byte *) column + column->length + 4);
         }
     }
 }
-
 
 
 //
@@ -528,7 +575,7 @@ void V_DrawPatchDirect(int x, int y, patch_t *patch)
 // Masks a column based translucent masked pic to the screen.
 //
 
-void V_DrawTLPatch(int x, int y, patch_t * patch)
+void V_DrawTLPatch(int x, int y, patch_t *patch)
 {
     int count, col;
     column_t *column;
@@ -543,21 +590,21 @@ void V_DrawTLPatch(int x, int y, patch_t * patch)
     x -= SHORT(patch->leftoffset);
     x += WIDESCREENDELTA; // [crispy] horizontal widescreen offset
 
-    if (x < 0
-     || x + SHORT(patch->width) > (SCREENWIDTH >> crispy->hires)
-     || y < 0
-     || y + SHORT(patch->height) > (SCREENHEIGHT >> crispy->hires))
+    if (x < 0 || x + SHORT(patch->width) > (SCREENWIDTH >> crispy->hires) ||
+        y < 0 || y + SHORT(patch->height) > (SCREENHEIGHT >> crispy->hires))
     {
         I_Error("Bad V_DrawTLPatch");
     }
 
     col = 0;
-    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH + ((x * dx) >> FRACBITS);
+    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH +
+              ((x * dx) >> FRACBITS);
 
     w = SHORT(patch->width);
-    for (; col < w << FRACBITS; x++, col+=dxi, desttop++)
+    for (; col < w << FRACBITS; x++, col += dxi, desttop++)
     {
-        column = (column_t *) ((byte *) patch + LONG(patch->columnofs[col >> FRACBITS]));
+        column = (column_t *) ((byte *) patch +
+                               LONG(patch->columnofs[col >> FRACBITS]));
 
         // step through the posts in a column
 
@@ -565,7 +612,8 @@ void V_DrawTLPatch(int x, int y, patch_t * patch)
         {
             int srccol = 0;
             source = (byte *) column + 3;
-            dest = desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
+            dest =
+                desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
             count = (column->length * dy) >> FRACBITS;
 
             while (count--)
@@ -585,7 +633,7 @@ void V_DrawTLPatch(int x, int y, patch_t * patch)
 // villsa [STRIFE] Masks a column based translucent masked pic to the screen.
 //
 
-void V_DrawXlaPatch(int x, int y, patch_t * patch)
+void V_DrawXlaPatch(int x, int y, patch_t *patch)
 {
     int count, col;
     column_t *column;
@@ -600,7 +648,7 @@ void V_DrawXlaPatch(int x, int y, patch_t * patch)
     x -= SHORT(patch->leftoffset);
     x += WIDESCREENDELTA; // [crispy] horizontal widescreen offset
 
-/*
+    /*
     if(patchclip_callback)
     {
         if(!patchclip_callback(patch, x, y))
@@ -609,23 +657,26 @@ void V_DrawXlaPatch(int x, int y, patch_t * patch)
 */
 
     col = 0;
-    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH + ((x * dx) >> FRACBITS);
+    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH +
+              ((x * dx) >> FRACBITS);
 
     w = SHORT(patch->width);
-    for(; col < w << FRACBITS; x++, col+=dxi, desttop++)
+    for (; col < w << FRACBITS; x++, col += dxi, desttop++)
     {
-        column = (column_t *) ((byte *) patch + LONG(patch->columnofs[col >> FRACBITS]));
+        column = (column_t *) ((byte *) patch +
+                               LONG(patch->columnofs[col >> FRACBITS]));
 
         // step through the posts in a column
 
-        while(column->topdelta != 0xff)
+        while (column->topdelta != 0xff)
         {
             int srccol = 0;
             source = (byte *) column + 3;
-            dest = desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
+            dest =
+                desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
             count = (column->length * dy) >> FRACBITS;
 
-            while(count--)
+            while (count--)
             {
                 *dest = drawpatchpx(*dest, source[srccol >> FRACBITS]);
                 srccol += dyi;
@@ -642,7 +693,7 @@ void V_DrawXlaPatch(int x, int y, patch_t * patch)
 // Masks a column based translucent masked pic to the screen.
 //
 
-void V_DrawAltTLPatch(int x, int y, patch_t * patch)
+void V_DrawAltTLPatch(int x, int y, patch_t *patch)
 {
     int count, col;
     column_t *column;
@@ -657,21 +708,21 @@ void V_DrawAltTLPatch(int x, int y, patch_t * patch)
     x -= SHORT(patch->leftoffset);
     x += WIDESCREENDELTA; // [crispy] horizontal widescreen offset
 
-    if (x < 0
-     || x + SHORT(patch->width) > (SCREENWIDTH >> crispy->hires)
-     || y < 0
-     || y + SHORT(patch->height) > (SCREENHEIGHT >> crispy->hires))
+    if (x < 0 || x + SHORT(patch->width) > (SCREENWIDTH >> crispy->hires) ||
+        y < 0 || y + SHORT(patch->height) > (SCREENHEIGHT >> crispy->hires))
     {
         I_Error("Bad V_DrawAltTLPatch");
     }
 
     col = 0;
-    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH + ((x * dx) >> FRACBITS);
+    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH +
+              ((x * dx) >> FRACBITS);
 
     w = SHORT(patch->width);
-    for (; col < w << FRACBITS; x++, col+=dxi, desttop++)
+    for (; col < w << FRACBITS; x++, col += dxi, desttop++)
     {
-        column = (column_t *) ((byte *) patch + LONG(patch->columnofs[col >> FRACBITS]));
+        column = (column_t *) ((byte *) patch +
+                               LONG(patch->columnofs[col >> FRACBITS]));
 
         // step through the posts in a column
 
@@ -679,7 +730,8 @@ void V_DrawAltTLPatch(int x, int y, patch_t * patch)
         {
             int srccol = 0;
             source = (byte *) column + 3;
-            dest = desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
+            dest =
+                desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
             count = (column->length * dy) >> FRACBITS;
 
             while (count--)
@@ -709,7 +761,8 @@ void V_DrawShadowedPatch(int x, int y, patch_t *patch)
     int w;
 
     // [crispy] four different rendering functions
-    drawpatchpx_t *const drawpatchpx = drawpatchpx_a[!dp_translucent][!dp_translation];
+    drawpatchpx_t *const drawpatchpx =
+        drawpatchpx_a[!dp_translucent][!dp_translation];
     // [crispy] shadow, no coloring or color-translation are used
     drawpatchpx_t *const drawpatchpx2 = drawshadow;
 
@@ -717,22 +770,23 @@ void V_DrawShadowedPatch(int x, int y, patch_t *patch)
     x -= SHORT(patch->leftoffset);
     x += WIDESCREENDELTA; // [crispy] horizontal widescreen offset
 
-    if (x < 0
-     || x + SHORT(patch->width) > (SCREENWIDTH >> crispy->hires)
-     || y < 0
-     || y + SHORT(patch->height) > (SCREENHEIGHT >> crispy->hires))
+    if (x < 0 || x + SHORT(patch->width) > (SCREENWIDTH >> crispy->hires) ||
+        y < 0 || y + SHORT(patch->height) > (SCREENHEIGHT >> crispy->hires))
     {
         I_Error("Bad V_DrawShadowedPatch");
     }
 
     col = 0;
-    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH + ((x * dx) >> FRACBITS);
-    desttop2 = dest_screen + (((y + 2) * dy) >> FRACBITS) * SCREENWIDTH + (((x + 2) * dx) >> FRACBITS);
+    desttop = dest_screen + ((y * dy) >> FRACBITS) * SCREENWIDTH +
+              ((x * dx) >> FRACBITS);
+    desttop2 = dest_screen + (((y + 2) * dy) >> FRACBITS) * SCREENWIDTH +
+               (((x + 2) * dx) >> FRACBITS);
 
     w = SHORT(patch->width);
-    for (; col < w << FRACBITS; x++, col+=dxi, desttop++, desttop2++)
+    for (; col < w << FRACBITS; x++, col += dxi, desttop++, desttop2++)
     {
-        column = (column_t *) ((byte *) patch + LONG(patch->columnofs[col >> FRACBITS]));
+        column = (column_t *) ((byte *) patch +
+                               LONG(patch->columnofs[col >> FRACBITS]));
 
         // step through the posts in a column
 
@@ -740,8 +794,10 @@ void V_DrawShadowedPatch(int x, int y, patch_t *patch)
         {
             int srccol = 0;
             source = (byte *) column + 3;
-            dest = desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
-            dest2 = desttop2 + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
+            dest =
+                desttop + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
+            dest2 =
+                desttop2 + ((column->topdelta * dy) >> FRACBITS) * SCREENWIDTH;
             count = (column->length * dy) >> FRACBITS;
 
             while (count--)
@@ -751,7 +807,6 @@ void V_DrawShadowedPatch(int x, int y, patch_t *patch)
                 *dest = drawpatchpx(*dest, source[srccol >> FRACBITS]);
                 srccol += dyi;
                 dest += SCREENWIDTH;
-
             }
             column = (column_t *) ((byte *) column + column->length + 4);
         }
@@ -788,24 +843,21 @@ void V_DrawBlock(int x, int y, int width, int height, pixel_t *src)
     pixel_t *dest;
 
 #ifdef RANGECHECK
-    if (x < 0
-     || x + width >SCREENWIDTH
-     || y < 0
-     || y + height > SCREENHEIGHT)
+    if (x < 0 || x + width > SCREENWIDTH || y < 0 || y + height > SCREENHEIGHT)
     {
-	I_Error ("Bad V_DrawBlock");
+        I_Error("Bad V_DrawBlock");
     }
 #endif
 
-    V_MarkRect (x, y, width, height);
+    V_MarkRect(x, y, width, height);
 
     dest = dest_screen + (y << crispy->hires) * SCREENWIDTH + x;
 
     while (height--)
     {
-	memcpy (dest, src, width * sizeof(*dest));
-	src += width;
-	dest += SCREENWIDTH;
+        memcpy(dest, src, width * sizeof(*dest));
+        src += width;
+        dest += SCREENWIDTH;
     }
 }
 
@@ -901,8 +953,8 @@ void V_DrawHorizLine(int x, int y, int w, int c)
     int x1;
 
     // [crispy] prevent framebuffer overflows
-    if (x + w > (unsigned)SCREENWIDTH)
-	w = SCREENWIDTH - x;
+    if (x + w > (unsigned) SCREENWIDTH)
+        w = SCREENWIDTH - x;
 
     buf = I_VideoBuffer + SCREENWIDTH * y + x;
 
@@ -929,9 +981,9 @@ void V_DrawVertLine(int x, int y, int h, int c)
 void V_DrawBox(int x, int y, int w, int h, int c)
 {
     V_DrawHorizLine(x, y, w, c);
-    V_DrawHorizLine(x, y+h-1, w, c);
+    V_DrawHorizLine(x, y + h - 1, w, c);
     V_DrawVertLine(x, y, h, c);
-    V_DrawVertLine(x+w-1, y, h, c);
+    V_DrawVertLine(x + w - 1, y, h, c);
 }
 
 static void V_DrawRawScreen(byte *raw, int size)
@@ -942,7 +994,8 @@ static void V_DrawRawScreen(byte *raw, int size)
     // [crispy] pillar boxing
     if (SCREENWIDTH != NONWIDEWIDTH)
     {
-        V_DrawFilledBox(0, 0, WIDESCREENDELTA << crispy->hires, SCREENHEIGHT, 0);
+        V_DrawFilledBox(0, 0, WIDESCREENDELTA << crispy->hires, SCREENHEIGHT,
+                        0);
         V_DrawFilledBox(SCREENWIDTH - (WIDESCREENDELTA << crispy->hires), 0,
                         WIDESCREENDELTA << crispy->hires, SCREENHEIGHT, 0);
     }
@@ -967,7 +1020,7 @@ void V_DrawFullscreenRawOrPatch(lumpindex_t index)
     }
     else if (size % 200 == 0)
     {
-        V_DrawRawScreen((byte*)patch, size);
+        V_DrawRawScreen((byte *) patch, size);
     }
     else
     {
@@ -998,7 +1051,7 @@ void V_FillFlat(int y_start, int y_stop, int x_start, int x_stop,
 //
 // V_Init
 //
-void V_Init (void)
+void V_Init(void)
 {
     // [crispy] initialize resolution-agnostic patch drawing
     if (NONWIDEWIDTH && SCREENHEIGHT)
@@ -1031,30 +1084,29 @@ void V_RestoreBuffer(void)
 // SCREEN SHOTS
 //
 
-typedef PACKED_STRUCT (
-{
-    char		manufacturer;
-    char		version;
-    char		encoding;
-    char		bits_per_pixel;
+typedef PACKED_STRUCT({
+    char manufacturer;
+    char version;
+    char encoding;
+    char bits_per_pixel;
 
-    unsigned short	xmin;
-    unsigned short	ymin;
-    unsigned short	xmax;
-    unsigned short	ymax;
+    unsigned short xmin;
+    unsigned short ymin;
+    unsigned short xmax;
+    unsigned short ymax;
 
-    unsigned short	hres;
-    unsigned short	vres;
+    unsigned short hres;
+    unsigned short vres;
 
-    unsigned char	palette[48];
+    unsigned char palette[48];
 
-    char		reserved;
-    char		color_planes;
-    unsigned short	bytes_per_line;
-    unsigned short	palette_type;
+    char reserved;
+    char color_planes;
+    unsigned short bytes_per_line;
+    unsigned short palette_type;
 
-    char		filler[58];
-    unsigned char	data;		// unbounded
+    char filler[58];
+    unsigned char data; // unbounded
 }) pcx_t;
 
 
@@ -1062,58 +1114,57 @@ typedef PACKED_STRUCT (
 // WritePCXfile
 //
 
-void WritePCXfile(char *filename, pixel_t *data,
-                  int width, int height,
+void WritePCXfile(char *filename, pixel_t *data, int width, int height,
                   byte *palette)
 {
-    int		i;
-    int		length;
-    pcx_t*	pcx;
-    byte*	pack;
+    int i;
+    int length;
+    pcx_t *pcx;
+    byte *pack;
 
-    pcx = Z_Malloc (width*height*2+1000, PU_STATIC, NULL);
+    pcx = Z_Malloc(width * height * 2 + 1000, PU_STATIC, NULL);
 
-    pcx->manufacturer = 0x0a;		// PCX id
-    pcx->version = 5;			// 256 color
-    pcx->encoding = 1;			// uncompressed
-    pcx->bits_per_pixel = 8;		// 256 color
+    pcx->manufacturer = 0x0a; // PCX id
+    pcx->version = 5;         // 256 color
+    pcx->encoding = 1;        // uncompressed
+    pcx->bits_per_pixel = 8;  // 256 color
     pcx->xmin = 0;
     pcx->ymin = 0;
-    pcx->xmax = SHORT(width-1);
-    pcx->ymax = SHORT(height-1);
+    pcx->xmax = SHORT(width - 1);
+    pcx->ymax = SHORT(height - 1);
     pcx->hres = SHORT(1);
     pcx->vres = SHORT(1);
-    memset (pcx->palette,0,sizeof(pcx->palette));
-    pcx->reserved = 0;                  // PCX spec: reserved byte must be zero
-    pcx->color_planes = 1;		// chunky image
+    memset(pcx->palette, 0, sizeof(pcx->palette));
+    pcx->reserved = 0;     // PCX spec: reserved byte must be zero
+    pcx->color_planes = 1; // chunky image
     pcx->bytes_per_line = SHORT(width);
-    pcx->palette_type = SHORT(2);	// not a grey scale
-    memset (pcx->filler,0,sizeof(pcx->filler));
+    pcx->palette_type = SHORT(2); // not a grey scale
+    memset(pcx->filler, 0, sizeof(pcx->filler));
 
     // pack the image
     pack = &pcx->data;
 
-    for (i=0 ; i<width*height ; i++)
+    for (i = 0; i < width * height; i++)
     {
-	if ( (*data & 0xc0) != 0xc0)
-	    *pack++ = *data++;
-	else
-	{
-	    *pack++ = 0xc1;
-	    *pack++ = *data++;
-	}
+        if ((*data & 0xc0) != 0xc0)
+            *pack++ = *data++;
+        else
+        {
+            *pack++ = 0xc1;
+            *pack++ = *data++;
+        }
     }
 
     // write the palette
-    *pack++ = 0x0c;	// palette ID byte
-    for (i=0 ; i<768 ; i++)
-	*pack++ = *palette++;
+    *pack++ = 0x0c; // palette ID byte
+    for (i = 0; i < 768; i++)
+        *pack++ = *palette++;
 
     // write output file
-    length = pack - (byte *)pcx;
-    M_WriteFile (filename, pcx, length);
+    length = pack - (byte *) pcx;
+    M_WriteFile(filename, pcx, length);
 
-    Z_Free (pcx);
+    Z_Free(pcx);
 }
 
 #ifdef HAVE_LIBPNG
@@ -1131,21 +1182,20 @@ static void warning_fn(png_structp p, png_const_charp s)
     printf("libpng warning: %s\n", s);
 }
 
-void WritePNGfile(char *filename, pixel_t *data,
-                  int width, int height,
+void WritePNGfile(char *filename, pixel_t *data, int width, int height,
                   byte *palette)
 {
     png_structp ppng;
     png_infop pinfo;
-//  png_colorp pcolor;
+    //  png_colorp pcolor;
     FILE *handle;
     int i, j;
-//  int w_factor, h_factor;
+    //  int w_factor, h_factor;
     byte *rowbuf;
 
-    extern void I_RenderReadPixels(byte **data, int *w, int *h, int *p);
+    extern void I_RenderReadPixels(byte * *data, int *w, int *h, int *p);
 
-/*
+    /*
     if (aspect_ratio_correct == 1)
     {
         // scale up to accommodate aspect ratio correction
@@ -1168,8 +1218,8 @@ void WritePNGfile(char *filename, pixel_t *data,
         return;
     }
 
-    ppng = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,
-                                   error_fn, warning_fn);
+    ppng = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, error_fn,
+                                   warning_fn);
     if (!ppng)
     {
         fclose(handle);
@@ -1196,7 +1246,7 @@ void WritePNGfile(char *filename, pixel_t *data,
                  8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
 #endif
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-/*
+    /*
     png_set_IHDR(ppng, pinfo, width, height,
                  8, PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
@@ -1222,7 +1272,7 @@ void WritePNGfile(char *filename, pixel_t *data,
 
     png_write_info(ppng, pinfo);
 
-/*
+    /*
     rowbuf = malloc(width);
 
     if (rowbuf)
@@ -1282,13 +1332,13 @@ void V_ScreenShot(const char *format)
         ext = "pcx";
     }
 
-    for (i=0; i<=9999; i++) // [crispy] increase screenshot filename limit
+    for (i = 0; i <= 9999; i++) // [crispy] increase screenshot filename limit
     {
         M_snprintf(lbmname, sizeof(lbmname), format, i, ext);
 
         if (!M_FileExists(lbmname))
         {
-            break;      // file doesn't exist
+            break; // file doesn't exist
         }
     }
 
@@ -1297,36 +1347,34 @@ void V_ScreenShot(const char *format)
 #ifdef HAVE_LIBPNG
         if (png_screenshots)
         {
-            I_Error ("V_ScreenShot: Couldn't create a PNG");
+            I_Error("V_ScreenShot: Couldn't create a PNG");
         }
         else
 #endif
         {
-            I_Error ("V_ScreenShot: Couldn't create a PCX");
+            I_Error("V_ScreenShot: Couldn't create a PCX");
         }
     }
 
 #ifdef HAVE_LIBPNG
     if (png_screenshots)
     {
-    WritePNGfile(lbmname, I_VideoBuffer,
-                 SCREENWIDTH, SCREENHEIGHT,
-                 W_CacheLumpName (DEH_String("PLAYPAL"), PU_CACHE));
+        WritePNGfile(lbmname, I_VideoBuffer, SCREENWIDTH, SCREENHEIGHT,
+                     W_CacheLumpName(DEH_String("PLAYPAL"), PU_CACHE));
     }
     else
 #endif
     {
-    // save the pcx file
-    WritePCXfile(lbmname, I_VideoBuffer,
-                 SCREENWIDTH, SCREENHEIGHT,
-                 W_CacheLumpName (DEH_String("PLAYPAL"), PU_CACHE));
+        // save the pcx file
+        WritePCXfile(lbmname, I_VideoBuffer, SCREENWIDTH, SCREENHEIGHT,
+                     W_CacheLumpName(DEH_String("PLAYPAL"), PU_CACHE));
     }
 }
 
 #define MOUSE_SPEED_BOX_WIDTH  120
 #define MOUSE_SPEED_BOX_HEIGHT 9
-#define MOUSE_SPEED_BOX_X (SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10)
-#define MOUSE_SPEED_BOX_Y 15
+#define MOUSE_SPEED_BOX_X      (SCREENWIDTH - MOUSE_SPEED_BOX_WIDTH - 10)
+#define MOUSE_SPEED_BOX_Y      15
 
 //
 // V_DrawMouseSpeedBox
@@ -1377,8 +1425,8 @@ static void DrawAcceleratingBox(int speed)
     if (linelen < redline_x)
     {
         V_DrawHorizLine(MOUSE_SPEED_BOX_X + 1,
-                        MOUSE_SPEED_BOX_Y + MOUSE_SPEED_BOX_HEIGHT / 2,
-                        linelen, white);
+                        MOUSE_SPEED_BOX_Y + MOUSE_SPEED_BOX_HEIGHT / 2, linelen,
+                        white);
     }
     else
     {
@@ -1420,8 +1468,8 @@ static void DrawNonAcceleratingBox(int speed)
     linelen = speed * (MOUSE_SPEED_BOX_WIDTH - 1) / max_seen_speed;
 
     V_DrawHorizLine(MOUSE_SPEED_BOX_X + 1,
-                    MOUSE_SPEED_BOX_Y + MOUSE_SPEED_BOX_HEIGHT / 2,
-                    linelen, white);
+                    MOUSE_SPEED_BOX_Y + MOUSE_SPEED_BOX_HEIGHT / 2, linelen,
+                    white);
 }
 
 void V_DrawMouseSpeedBox(int speed)
@@ -1449,10 +1497,10 @@ void V_DrawMouseSpeedBox(int speed)
 
     // Calculate box position
 
-    V_DrawFilledBox(MOUSE_SPEED_BOX_X, MOUSE_SPEED_BOX_Y,
-                    MOUSE_SPEED_BOX_WIDTH, MOUSE_SPEED_BOX_HEIGHT, bgcolor);
-    V_DrawBox(MOUSE_SPEED_BOX_X, MOUSE_SPEED_BOX_Y,
-              MOUSE_SPEED_BOX_WIDTH, MOUSE_SPEED_BOX_HEIGHT, bordercolor);
+    V_DrawFilledBox(MOUSE_SPEED_BOX_X, MOUSE_SPEED_BOX_Y, MOUSE_SPEED_BOX_WIDTH,
+                    MOUSE_SPEED_BOX_HEIGHT, bgcolor);
+    V_DrawBox(MOUSE_SPEED_BOX_X, MOUSE_SPEED_BOX_Y, MOUSE_SPEED_BOX_WIDTH,
+              MOUSE_SPEED_BOX_HEIGHT, bordercolor);
     V_DrawHorizLine(MOUSE_SPEED_BOX_X + 1, MOUSE_SPEED_BOX_Y + 4,
                     MOUSE_SPEED_BOX_WIDTH - 2, black);
 
