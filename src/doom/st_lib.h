@@ -58,21 +58,6 @@ typedef struct
 } st_number_t;
 
 
-// Percent widget ("child" of number widget,
-//  or, more precisely, contains a number widget.)
-typedef struct
-{
-    // number information
-    st_number_t n;
-
-    // percent sign graphic
-    patch_t *p;
-
-    // [crispy] remember previous colorization
-    byte *oldtranslation;
-} st_percent_t;
-
-
 // Multiple Icon widget
 typedef struct
 {
@@ -140,14 +125,6 @@ void STlib_initNum(st_number_t *n, int x, int y, patch_t **pl, int *num,
                    boolean *on, int width);
 
 void STlib_updateNum(st_number_t *n, boolean refresh);
-
-
-// Percent widget routines
-void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
-                       boolean *on, patch_t *percent);
-
-
-void STlib_updatePercent(st_percent_t *per, int refresh);
 
 
 // Multiple Icon widget routines

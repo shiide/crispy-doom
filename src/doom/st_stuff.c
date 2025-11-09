@@ -248,9 +248,6 @@ static patch_t *sbarr;
 // 0-9, tall numbers
 static patch_t *tallnum[10];
 
-// tall % sign
-static patch_t *tallpercent;
-
 // 0-9, short, yellow (,different!) numbers
 static patch_t *shortnum[10];
 
@@ -2011,11 +2008,6 @@ static void ST_loadUnloadGraphics(load_callback_t callback)
         callback(namebuf, &shortnum[i]);
     }
 
-    // Load percent key.
-    //Note: why not load STMINUS here, too?
-
-    callback(DEH_String("STTPRCNT"), &tallpercent);
-
     // key cards
     for (i = 0; i < NUMCARDS; i++)
     {
@@ -2185,7 +2177,7 @@ void ST_createWidgets(void)
     // the last weapon type
     w_ready.data = plyr->readyweapon;
 
-    // health percentage
+    // health value
     STlib_initNum(&w_health, ST_HEALTHX, ST_HEALTHY, tallnum, &plyr->health,
                   &st_statusbaron, ST_HEALTHWIDTH);
 
@@ -2211,7 +2203,7 @@ void ST_createWidgets(void)
     STlib_initMultIcon(&w_faces, ST_FACESX, ST_FACESY, faces, &st_faceindex,
                        &st_statusbarface);
 
-    // armor percentage - should be colored later
+    // armor value - should be colored later
     STlib_initNum(&w_armor, ST_ARMORX, ST_ARMORY, tallnum, &plyr->armorpoints,
                   &st_statusbaron, ST_ARMORWIDTH);
 

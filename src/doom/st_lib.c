@@ -148,39 +148,6 @@ void STlib_updateNum(st_number_t *n, boolean refresh)
 }
 
 
-//
-void STlib_initPercent(st_percent_t *p, int x, int y, patch_t **pl, int *num,
-                       boolean *on, patch_t *percent)
-{
-    STlib_initNum(&p->n, x, y, pl, num, on, 3);
-    p->p = percent;
-
-    // [crispy] remember previous colorization
-    p->oldtranslation = NULL;
-}
-
-
-void STlib_updatePercent(st_percent_t *per, int refresh)
-{
-    // [crispy] remember previous colorization
-    if (per->oldtranslation != dp_translation)
-    {
-        refresh = true;
-        per->oldtranslation = dp_translation;
-    }
-
-    STlib_updateNum(&per->n, refresh); // [crispy] moved here
-
-    if (crispy->coloredhud & COLOREDHUD_BAR)
-        dp_translation = cr[CR_GRAY];
-
-    if (refresh && *per->n.on)
-        V_DrawPatch(per->n.x, per->n.y, per->p);
-
-    dp_translation = NULL;
-}
-
-
 void STlib_initMultIcon(st_multicon_t *i, int x, int y, patch_t **il, int *inum,
                         boolean *on)
 {
