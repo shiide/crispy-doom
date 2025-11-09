@@ -107,7 +107,7 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 #define ST_GODFACE        (ST_NUMPAINFACES * ST_FACESTRIDE)
 #define ST_DEADFACE       (ST_GODFACE + 1)
 
-#define ST_FACESX 143
+#define ST_FACESX -56
 #define ST_FACESY 168
 
 #define ST_EVILGRINCOUNT     (2 * TICRATE)
@@ -127,15 +127,17 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 //       into a buffer,
 //       or into the frame buffer?
 
+#define ST_NUMBERS_Y 178
+
 // AMMO number pos.
 #define ST_AMMOWIDTH 3
-#define ST_AMMOX     (44 - ST_WIDESCREENDELTA)
-#define ST_AMMOY     171
+#define ST_AMMOX     340
+#define ST_AMMOY     ST_NUMBERS_Y
 
 // HEALTH number pos.
 #define ST_HEALTHWIDTH 3
-#define ST_HEALTHX     (90 - ST_WIDESCREENDELTA)
-#define ST_HEALTHY     171
+#define ST_HEALTHX     14
+#define ST_HEALTHY     ST_NUMBERS_Y
 
 // Weapon pos.
 #define ST_ARMSX      (111 - ST_WIDESCREENDELTA)
@@ -151,20 +153,22 @@ extern boolean inhelpscreens; // [crispy] prevent palette changes
 #define ST_FRAGSWIDTH 2
 
 // ARMOR number pos.
-#define ST_ARMORWIDTH 3
-#define ST_ARMORX     (221 + ST_WIDESCREENDELTA)
-#define ST_ARMORY     171
+#define ST_ARMORWIDTH   3
+#define ST_ARMORX       90
+#define ST_ARMORY       ST_NUMBERS_Y
+#define ST_ARMOR_ICON_X (ST_ARMORX - 50)
+#define ST_ARMOR_ICON_Y (ST_ARMORY + 20)
 
 // Key icon positions.
 #define ST_KEY0WIDTH  8
 #define ST_KEY0HEIGHT 5
-#define ST_KEY0X      (239 + ST_WIDESCREENDELTA)
+#define ST_KEY0X      (260 + ST_WIDESCREENDELTA)
 #define ST_KEY0Y      171
 #define ST_KEY1WIDTH  ST_KEY0WIDTH
-#define ST_KEY1X      (239 + ST_WIDESCREENDELTA)
+#define ST_KEY1X      (260 + ST_WIDESCREENDELTA)
 #define ST_KEY1Y      181
 #define ST_KEY2WIDTH  ST_KEY0WIDTH
-#define ST_KEY2X      (239 + ST_WIDESCREENDELTA)
+#define ST_KEY2X      (260 + ST_WIDESCREENDELTA)
 #define ST_KEY2Y      191
 
 // Ammunition counter.
@@ -248,9 +252,6 @@ static patch_t *sbarr;
 // 0-9, tall numbers
 static patch_t *tallnum[10];
 
-// tall % sign
-static patch_t *tallpercent;
-
 // 0-9, short, yellow (,different!) numbers
 static patch_t *shortnum[10];
 
@@ -277,7 +278,7 @@ static st_number_t w_ready;
 static st_number_t w_frags;
 
 // health widget
-static st_percent_t w_health;
+static st_number_t w_health;
 
 // arms background
 static st_binicon_t w_armsbg;
@@ -294,8 +295,11 @@ static st_multicon_t w_faces;
 // keycard widgets
 static st_multicon_t w_keyboxes[3];
 
+// armor icon
+static patch_t *armor_patch;
+
 // armor widget
-static st_percent_t w_armor;
+static st_number_t w_armor;
 
 // ammo widgets
 static st_number_t w_ammo[4];
@@ -389,7 +393,6 @@ void ST_Stop(void);
 
 void ST_refreshBackground(boolean force)
 {
-
     if (st_classicstatusbar || force)
     {
         V_UseBuffer(st_backing_screen);
@@ -1882,42 +1885,44 @@ void ST_drawWidgets(boolean refresh)
         }
     }
 
-    for (i = 0; i < 4; i++)
-    {
-        STlib_updateNum(&w_ammo[i], refresh);
-        STlib_updateNum(&w_maxammo[i], refresh);
-    }
+    // for (i = 0; i < 4; i++)
+    // {
+    //     STlib_updateNum(&w_ammo[i], refresh);
+    //     STlib_updateNum(&w_maxammo[i], refresh);
+    // }
 
     if (!gibbed)
     {
         dp_translation = ST_WidgetColor(hudcolor_health);
         // [crispy] negative player health
-        w_health.n.num = crispy->neghealth ? &plyr->neghealth : &plyr->health;
-        STlib_updatePercent(&w_health, refresh);
+        w_health.num = crispy->neghealth ? &plyr->neghealth : &plyr->health;
+        STlib_updateNum(&w_health, refresh);
     }
+    dp_translation = NULL;
+    V_DrawPatch(ST_ARMOR_ICON_X, ST_ARMOR_ICON_Y, armor_patch);
     dp_translation = ST_WidgetColor(hudcolor_armor);
-    STlib_updatePercent(&w_armor, refresh);
+    STlib_updateNum(&w_armor, refresh);
     dp_translation = NULL;
 
-    STlib_updateBinIcon(&w_armsbg, refresh);
+    // STlib_updateBinIcon(&w_armsbg, refresh);
 
     // [crispy] show SSG availability in the Shotgun slot of the arms widget
     st_shotguns =
         plyr->weaponowned[wp_shotgun] | plyr->weaponowned[wp_supershotgun];
 
-    for (i = 0; i < 6; i++)
-        STlib_updateMultIcon(&w_arms[i], refresh);
+    // for (i = 0; i < 6; i++)
+    //     STlib_updateMultIcon(&w_arms[i], refresh);
 
     // [crispy] draw the actual face widget background
-    if (st_crispyhud && (screenblocks % 3 == 0))
-    {
-        if (netgame)
-            V_DrawPatch(ST_FX, ST_Y + 1, faceback[displayplayer]);
-        else
-            V_CopyRect(ST_FX + WIDESCREENDELTA, 1, st_backing_screen,
-                       SHORT(faceback[0]->width), ST_HEIGHT - 1,
-                       ST_FX + WIDESCREENDELTA, ST_Y + 1);
-    }
+    // if (st_crispyhud && (screenblocks % 3 == 0))
+    // {
+    //     if (netgame)
+    //         V_DrawPatch(ST_FX, ST_Y + 1, faceback[displayplayer]);
+    //     else
+    //         V_CopyRect(ST_FX + WIDESCREENDELTA, 1, st_backing_screen,
+    //                    SHORT(faceback[0]->width), ST_HEIGHT - 1,
+    //                    ST_FX + WIDESCREENDELTA, ST_Y + 1);
+    // }
 
     STlib_updateMultIcon(&w_faces, refresh);
 
@@ -2011,11 +2016,6 @@ static void ST_loadUnloadGraphics(load_callback_t callback)
         callback(namebuf, &shortnum[i]);
     }
 
-    // Load percent key.
-    //Note: why not load STMINUS here, too?
-
-    callback(DEH_String("STTPRCNT"), &tallpercent);
-
     // key cards
     for (i = 0; i < NUMCARDS; i++)
     {
@@ -2046,6 +2046,9 @@ static void ST_loadUnloadGraphics(load_callback_t callback)
         DEH_snprintf(namebuf, 9, "STFB%d", i);
         callback(namebuf, &faceback[i]);
     }
+
+    // armor icon
+    callback(DEH_String("arm1b0"), &armor_patch);
 
     // status bar background bits
     if (W_CheckNumForName("STBAR") >= 0)
@@ -2185,9 +2188,9 @@ void ST_createWidgets(void)
     // the last weapon type
     w_ready.data = plyr->readyweapon;
 
-    // health percentage
-    STlib_initPercent(&w_health, ST_HEALTHX, ST_HEALTHY, tallnum, &plyr->health,
-                      &st_statusbaron, tallpercent);
+    // health value
+    STlib_initNum(&w_health, ST_HEALTHX, ST_HEALTHY, tallnum, &plyr->health,
+                  &st_statusbaron, ST_HEALTHWIDTH);
 
     // arms background
     STlib_initBinIcon(&w_armsbg, ST_ARMSBGX, ST_ARMSBGY, armsbg,
@@ -2211,9 +2214,9 @@ void ST_createWidgets(void)
     STlib_initMultIcon(&w_faces, ST_FACESX, ST_FACESY, faces, &st_faceindex,
                        &st_statusbarface);
 
-    // armor percentage - should be colored later
-    STlib_initPercent(&w_armor, ST_ARMORX, ST_ARMORY, tallnum,
-                      &plyr->armorpoints, &st_statusbaron, tallpercent);
+    // armor value - should be colored later
+    STlib_initNum(&w_armor, ST_ARMORX, ST_ARMORY, tallnum, &plyr->armorpoints,
+                  &st_statusbaron, ST_ARMORWIDTH);
 
     // keyboxes 0-2
     STlib_initMultIcon(&w_keyboxes[0], ST_KEY0X, ST_KEY0Y, keys, &keyboxes[0],
